@@ -1,0 +1,15 @@
+.gradle/
+build/
+**/build/
+
+local.properties
+*.iml
+.idea/
+
+*.apk
+*.ap_
+*.dex
+
+watchface/terminal-*.png
+watchface/build/
+watchface/watchface/build/

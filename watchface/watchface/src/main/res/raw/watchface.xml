@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WatchFace width="450" height="450" clipShape="CIRCLE">
+    <Metadata key="PREVIEW_TIME" value="10:10:00" />
+    <Metadata key="CLOCK_TYPE" value="DIGITAL" />
+
+    <Scene backgroundColor="#000800">
+        <PartImage x="0" y="0" width="450" height="450">
+            <Image resource="pipboy_face_bg" />
+        </PartImage>
+
+        <PartText x="105" y="58" width="240" height="24">
+            <Text align="CENTER">
+                <Font
+                    color="#8877ff72"
+                    family="SYNC_TO_DEVICE"
+                    size="18"
+                    weight="BOLD">
+                    <![CDATA[PIP-BOY 3000]]>
+                </Font>
+            </Text>
+        </PartText>
+
+        <PartText x="140" y="118" width="170" height="30">
+            <Text align="CENTER">
+                <Font
+                    color="#cc77ff72"
+                    family="SYNC_TO_DEVICE"
+                    size="16"
+                    weight="BOLD">
+                    <Template><![CDATA[BAT %s%%]]>
+                        <Parameter expression="[BATTERY_PERCENT]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <PartText x="105" y="260" width="240" height="48">
+            <Text align="CENTER">
+                <Font
+                    color="#ff77ff72"
+                    family="SYNC_TO_DEVICE"
+                    size="38"
+                    weight="BOLD">
+                    <Template><![CDATA[%s:%s]]>
+                        <Parameter expression="[HOUR_0_23_Z]" />
+                        <Parameter expression="[MINUTE_Z]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <PartText x="115" y="309" width="220" height="20">
+            <Text align="CENTER">
+                <Font
+                    color="#aa77ff72"
+                    family="SYNC_TO_DEVICE"
+                    size="12"
+                    weight="BOLD">
+                    <Template><![CDATA[%s, %s/%s]]>
+                        <Parameter expression="[DAY_OF_WEEK_S]" />
+                        <Parameter expression="[MONTH_Z]" />
+                        <Parameter expression="[DAY_Z]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <PartText x="70" y="328" width="310" height="22">
+            <Text align="CENTER">
+                <Font
+                    color="#aa77ff72"
+                    family="SYNC_TO_DEVICE"
+                    size="12"
+                    weight="BOLD">
+                    <Template><![CDATA[WX %s  %s]]>
+                        <Parameter expression="[WEATHER.TEMPERATURE]" />
+                        <Parameter expression="[WEATHER.CONDITION_NAME]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <PartText x="58" y="128" width="70" height="36">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[STAT]]></Font>
+            </Text>
+            <Launch target="app://vaultwatch/status" />
+        </PartText>
+
+        <PartText x="130" y="128" width="66" height="36">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[INV]]></Font>
+            </Text>
+            <Launch target="app://vaultwatch/inventory" />
+        </PartText>
+
+        <PartText x="198" y="128" width="72" height="36">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[DATA]]></Font>
+            </Text>
+            <Launch target="app://vaultwatch/data" />
+        </PartText>
+
+        <PartText x="276" y="128" width="66" height="36">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[MAP]]></Font>
+            </Text>
+            <Launch target="app://vaultwatch/map" />
+        </PartText>
+
+        <PartText x="346" y="128" width="66" height="36">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[RAD]]></Font>
+            </Text>
+            <Launch target="app://vaultwatch/radio" />
+        </PartText>
+
+        <PartText x="110" y="372" width="230" height="56">
+            <Text align="CENTER">
+                <Font color="#0177ff72" family="SYNC_TO_DEVICE" size="14" weight="BOLD"><![CDATA[OPEN TERMINAL]]></Font>
+            </Text>
+            <Launch target="com.megazegan.vaultwatch.face/com.megazegan.vaultwatch.face.TerminalActivity" />
+        </PartText>
+    </Scene>
+</WatchFace>

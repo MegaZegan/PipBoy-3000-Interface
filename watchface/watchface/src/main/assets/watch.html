@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#071109">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>VaultWatch Terminal</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="css/watch.css">
+</head>
+<body class="theme-green">
+    <div class="watch-shell" id="watchShell">
+        <div class="screen-glow"></div>
+        <div class="boot-screen" id="bootScreen" aria-live="polite">
+            <pre id="bootText"></pre>
+        </div>
+
+        <div class="pip-watch" id="pipWatch">
+            <header class="watch-header">
+                <div>
+                    <span class="tiny-label">PIP-BOY 3000</span>
+                    <strong id="viewTitle">STAT</strong>
+                    <div class="face-clock" aria-live="polite">
+                        <span id="faceTime">00:00</span>
+                        <span id="faceDate">MM/DD</span>
+                    </div>
+                </div>
+                <div class="header-readout">
+                    <span id="watchTime">00:00</span>
+                    <span id="watchDate">00/00</span>
+                </div>
+            </header>
+
+            <nav class="watch-tabs" aria-label="Pip watch sections">
+                <button class="tab-button active" type="button" data-view="status">STAT</button>
+                <button class="tab-button" type="button" data-view="inventory">INV</button>
+                <button class="tab-button" type="button" data-view="data">DATA</button>
+                <button class="tab-button" type="button" data-view="map">MAP</button>
+                <button class="tab-button" type="button" data-view="radio">RAD</button>
+            </nav>
+
+            <main class="watch-main">
+                <section class="watch-panel active status-panel" id="statusPanel" data-view-panel="status">
+                    <div class="status-grid">
+                        <div class="avatar-bay">
+                            <img class="vault-avatar" src="img/imported-pipboy/VaultBoy.png" alt="">
+                            <span class="avatar-caption">STATUS OK</span>
+                        </div>
+                        <div class="meters">
+                            <div class="meter">
+                                <img src="img/ico/helmet.png" alt="">
+                                <span>HP</span>
+                                <i><b style="width: 86%"></b></i>
+                                <em>086</em>
+                            </div>
+                            <div class="meter">
+                                <img src="img/ico/bolt.png" alt="">
+                                <span>AP</span>
+                                <i><b style="width: 72%"></b></i>
+                                <em>072</em>
+                            </div>
+                            <div class="meter danger">
+                                <img src="img/ico/radioactive.png" alt="">
+                                <span>RAD</span>
+                                <i><b id="radBar" style="width: 18%"></b></i>
+                                <em id="radValue">018</em>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="condition-strip" aria-label="Limb condition">
+                        <span><img src="img/ico/helmet.png" alt="">HEAD 92</span>
+                        <span><img src="img/ico/crosshair.png" alt="">ARM 81</span>
+                        <span><img src="img/ico/bolt.png" alt="">LEG 77</span>
+                        <span><img src="img/ico/radioactive.png" alt="">CORE 88</span>
+                    </div>
+                    <div class="special-line">
+                        <span>S 05</span><span>P 06</span><span>E 04</span><span>C 03</span><span>I 07</span><span>A 05</span><span>L 08</span>
+                    </div>
+                </section>
+
+                <section class="watch-panel" id="inventoryPanel" data-view-panel="inventory">
+                    <div class="list-detail">
+                        <div class="watch-list" id="inventoryList"></div>
+                        <article class="detail-card" id="itemDetail"></article>
+                    </div>
+                </section>
+
+                <section class="watch-panel" id="dataPanel" data-view-panel="data">
+                    <div class="data-stack">
+                        <div class="quest-row active" data-log="signal">
+                            <img src="img/ico/crosshair.png" alt="">
+                            <span>OPEN SIGNAL</span>
+                            <b>ACTIVE</b>
+                        </div>
+                        <div class="quest-row" data-log="supply">
+                            <img src="img/ico/bolt.png" alt="">
+                            <span>SUPPLY RUN</span>
+                            <b>47%</b>
+                        </div>
+                        <div class="quest-row" data-log="vault">
+                            <img src="img/ico/helmet.png" alt="">
+                            <span>VAULT CACHE</span>
+                            <b>NEW</b>
+                        </div>
+                        <div class="terminal-note" id="terminalNote">
+                            Follow the carrier tone north-east. Keep transmitter gain under 60%.
+                        </div>
+                    </div>
+                </section>
+
+                <section class="watch-panel" id="mapPanel" data-view-panel="map">
+                    <div class="map-wrap">
+                        <svg class="mini-map" viewBox="0 0 300 210" aria-label="Local tactical map">
+                            <defs>
+                                <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+                                    <path d="M16 0H0V16" fill="none"></path>
+                                </pattern>
+                            </defs>
+                            <rect width="300" height="210" fill="url(#grid)"></rect>
+                            <path class="road" d="M18 164c48-33 74-28 111-49 34-20 54-65 137-54"></path>
+                            <path class="road secondary" d="M66 32c31 43 36 75 26 150"></path>
+                            <path class="zone" d="M177 39l71 12 21 56-39 39-63-9-28-49z"></path>
+                        </svg>
+                        <button class="map-pin active" type="button" data-location="Relay 34" style="--x: 67%; --y: 31%" aria-label="Relay 34"></button>
+                        <button class="map-pin" type="button" data-location="Old Tunnel" style="--x: 33%; --y: 68%" aria-label="Old Tunnel"></button>
+                        <button class="map-pin" type="button" data-location="Water Plant" style="--x: 78%; --y: 67%" aria-label="Water Plant"></button>
+                    </div>
+                    <div class="map-readout" id="mapReadout">Relay 34 | 0.8 KM | E-NE</div>
+                </section>
+
+                <section class="watch-panel" id="radioPanel" data-view-panel="radio">
+                    <img class="radio-icon radio-waves" src="img/imported-pipboy/radiowaves.gif" alt="">
+                    <div class="radio-stack">
+                        <button class="station active" type="button" data-station="WVR 88.1" data-track="Atomic lounge loop">WVR 88.1</button>
+                        <button class="station" type="button" data-station="RANGER NET" data-track="Encrypted patrol burst">RANGER NET</button>
+                        <button class="station" type="button" data-station="CLASSICAL" data-track="String quartet fragment">CLASSICAL</button>
+                    </div>
+                    <div class="waveform" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <div class="now-playing" id="nowPlaying">WVR 88.1 | Atomic lounge loop</div>
+                </section>
+            </main>
+
+            <footer class="watch-footer">
+                <button class="icon-button" type="button" id="prevView" aria-label="Previous section">&lt;</button>
+                <button class="theme-toggle" type="button" id="themeToggle">GREEN</button>
+                <div class="footer-stats">
+                    <span id="batteryValue">BAT 100</span>
+                    <span id="noiseValue">SIG 73</span>
+                </div>
+                <button class="icon-button" type="button" id="nextView" aria-label="Next section">&gt;</button>
+            </footer>
+        </div>
+    </div>
+    <script src="js/watch.js"></script>
+</body>
+</html>

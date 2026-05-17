@@ -1,0 +1,17 @@
+{
+    "name": "VaultWatch Terminal",
+    "short_name": "VaultWatch",
+    "start_url": "watch.html",
+    "display": "fullscreen",
+    "background_color": "#061008",
+    "theme_color": "#77ff72",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "2345.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}
