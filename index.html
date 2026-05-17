@@ -1,0 +1,1987 @@
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Pip-Boy 3000 Interface | MegaZegan</title>
+		<meta name="description" content="Interactive Fallout-inspired Pip-Boy 3000 web interface by MegaZegan, built with HTML, CSS, JavaScript, Bootstrap, custom assets, and retro terminal effects.">
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<style>
+			@font-face {
+				font-family: Pipboy;
+				src: url('monofonto.ttf');
+			}
+
+			body {
+				font-family: Pipboy, monospace;
+				color: #14fe17;
+				background: #272b23;
+				margin: 0;
+				padding: 0;
+				font-size: 16px;
+				animation: flicker 0.5s infinite alternate;
+				overflow-x: hidden;
+			}
+
+			@keyframes flicker {
+				0% { opacity: 0.9; }
+				50% { opacity: 1; }
+				100% { opacity: 0.9; }
+			}
+
+			/* Screen effects */
+			body:after {
+				height: 100%;
+				width: 100%;
+				content: "";
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4) 1px, transparent 1px, transparent 2px);
+				opacity: 0.3;
+				z-index: 1000000;
+				pointer-events: none;
+			}
+
+			body:before {
+				content: "";
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: radial-gradient(ellipse at center, 
+							rgba(20,254,23,0.1) 0%,
+							rgba(20,254,23,0) 60%);
+				pointer-events: none;
+				z-index: 999;
+			}
+
+			.navbar {
+				border-bottom: 2px solid #14fe17;
+				margin: 0px 10px;
+			}
+
+			.navbar.navbar-light:before,
+			.navbar.navbar-light:after {
+				height: 7px;
+				width: 2px;
+				content: "";
+				position: absolute;
+				display: block;
+				z-index: 5000;
+				background: #14fe17;
+				bottom: -8px;
+			}
+
+			.navbar.navbar-light:before {
+				left: 0px;
+			}
+
+			.navbar.navbar-light:after {
+				right: 0px;
+			}
+
+			ul>li.nav-item>a.nav-link,
+			ul>li.nav-item.active>a.nav-link {
+				color: #14fe17 !important;
+				font-size: 32px;
+				line-height: 22px;
+				transition: all 0.2s ease;
+				text-shadow: 0 0 0px #14fe17;
+			}
+
+			ul>li.nav-item>a.nav-link:hover {
+				text-shadow: 0 0 8px #14fe17;
+				transform: scale(1.05);
+			}
+
+			.navbar-nav li.nav-item.active::before {
+				content: "";
+				position: absolute;
+				width: 100%;
+				height: 22px;
+				top: 18px;
+				left: 0px;
+				background: #272b23;
+				border-left: 2px solid;
+				border-right: 2px solid;
+				border-top: 2px solid;
+			}
+
+			.navbar-light ul.navbar-nav>li.nav-item>.nav-link,
+			.navbar-light ul.navbar-nav>li.nav-item.active>.nav-link {
+				text-align: center;
+				margin: auto;
+				font-size: 32px;
+				line-height: 22px;
+				padding-bottom: 0px;
+				z-index: 50;
+				position: relative;
+				background: #272b23;
+			}
+
+			.navbar-nav {
+				width: 100%;
+			}
+
+			.navbar-light ul.navbar-nav>li {
+				display: block;
+				position: relative;
+				width: 100%;
+			}
+
+			.center-image {
+				position: absolute;
+				margin-left: 100px;
+			}
+
+			.center-image img {
+				margin: auto;
+				display: block;
+				position: relative;
+				margin-top: 50px;
+				max-height: 250px;
+				filter: grayscale(1) sepia(100%) hue-rotate(55deg) saturate(7) brightness(1) contrast(2);
+				margin-top: 50px;
+				margin-left: -10px;
+				transition: all 0.3s ease;
+			}
+
+			.center-image img:hover {
+				transform: scale(1.05) rotate(2deg);
+				filter: grayscale(1) sepia(100%) hue-rotate(55deg) saturate(10) brightness(1.1) contrast(2);
+			}
+
+			.pip-footer {
+				position: fixed;
+				bottom: 0;
+				width: calc(100% - 20px);
+				margin: 10px;
+				border: none;
+				font-size: 22px;
+			}
+
+			.navbar.navbar-light .navbar-nav {
+				margin: 0px 100px;
+			}
+
+			.navbar.navbar-light .navbar-nav>li {
+				padding: 0px 20px;
+			}
+
+			.nav.nav-tabs {
+				margin: 20px;
+				border-bottom: none;
+			}
+
+			.nav.nav-tabs>li:nth-child(2)>a {
+				opacity: 0.6;
+			}
+
+			.nav.nav-tabs>li:nth-child(3)>a {
+				opacity: 0.3;
+			}
+
+			.nav.nav-tabs>.nav-item>.nav-link:hover {
+				border: 1px solid transparent;
+			}
+
+			.nav.nav-tabs>li>a {
+				font-size: 26px !important;
+				background: transparent !important;
+				border: 1px solid transparent !important;
+				padding: 5px 10px;
+				transition: all 0.2s ease;
+			}
+
+			.nav.nav-tabs>li>a:hover {
+				opacity: 1 !important;
+				text-shadow: 0 0 8px #14fe17;
+			}
+
+			.level-progress {
+				width: 100%;
+				height: 10px;
+				border: 2px solid #14fe17;
+				display: inline-block;
+				position: relative;
+				background-color: #272b23;
+				cursor: pointer;
+				overflow: hidden;
+				border-radius: 5px;
+			}
+
+			.level-progress-indicator {
+				height: 100%;
+				background: #14fe17;
+				width: 0%;
+				transition: width 0.5s ease, background-color 0.3s ease;
+			}
+
+			.level-progress:hover .level-progress-indicator {
+				background: #0ed811;
+			}
+
+			.stat-bar {
+				width: 80px;
+				margin: auto;
+				transition: all 0.3s ease;
+				position: relative;
+			}
+
+			.stat-bar:hover {
+				width: 150px;
+			}
+
+			.stat-bar.critical .level-progress-indicator {
+				animation: pulse 0.5s infinite alternate;
+			}
+
+			@keyframes pulse {
+				0% { background-color: #14fe17; }
+				100% { background-color: #ff3333; }
+			}
+
+			#status {
+				max-width: 400px;
+				margin: auto;
+			}
+
+			.stat-bars>.row {
+				margin-bottom: 75px;
+			}
+
+			.w10 { width: 10%; }
+			.w20 { width: 20%; }
+			.w30 { width: 30%; }
+			.w40 { width: 40%; }
+			.w50 { width: 50%; }
+			.w60 { width: 60%; }
+			.w70 { width: 70%; }
+			.w80 { width: 80%; }
+			.w90 { width: 90%; }
+			.w100 { width: 100%; }
+
+			.stat-numbers .col-1,
+			.stat-numbers .col-2 {
+				background: rgba(16, 255, 0, 0.15);
+				margin-right: 4px;
+			}
+
+			.stat-numbers .col-1.transparent,
+			.stat-numbers .col-2.transparent {
+				background: transparent;
+			}
+
+			/* SVG icons in stat bar — inherit currentColor so they theme-switch automatically */
+			.stat-numbers svg.stat-icon {
+				width: 100%;
+				display: block;
+				fill: currentColor;
+				stroke: currentColor;
+			}
+			.stat-numbers svg.sm-icon {
+				width: 16px;
+				height: 16px;
+				display: block;
+				fill: currentColor;
+				stroke: currentColor;
+			}
+
+			/* SPECIAL stat SVG panels */
+			.special-svg {
+				display: none;
+				width: 100%;
+				max-height: 220px;
+			}
+			.special-svg.active { display: block; }
+
+			/* Vault Boy SVG */
+			.center-image svg {
+				max-height: 250px;
+				display: block;
+				margin: 50px auto 0;
+				transition: all 0.3s ease;
+			}
+			.center-image svg:hover {
+				transform: scale(1.05) rotate(2deg);
+			}
+
+			/* Map SVG container */
+			#panorama-view {
+				overflow: hidden;
+				position: relative;
+				width: 100%;
+				height: 400px;
+				cursor: grab;
+			}
+			#panorama-view.grabbing { cursor: grabbing; }
+			#map-svg {
+				position: absolute;
+				top: 0; left: 0;
+				width: 1400px;
+				height: 820px;
+			}
+
+			.tab-pane {
+				display: none;
+			}
+
+			.tab-pane.active {
+				display: block;
+			}
+
+			.helmet {
+				padding-top: 5px;
+			}
+
+			#weapons.tab-pane.full {
+				width: 100%;
+				max-width: 100%;
+			}
+
+			.item-list {
+				float: left;
+				padding: 0px;
+				list-style: none;
+				margin: 0px;
+			}
+
+			.item-list li a {
+				display: block;
+				width: 300px;
+				padding: 5px 10px;
+				border-radius: 2px;
+				color: #14fe17;
+				padding-left: 25px;
+				text-decoration: none !important;
+				transition: background 0.3s ease, color 0.3s ease;
+				position: relative;
+			}
+
+			.item-list li a:hover {
+				text-decoration: none;
+				background: #14fe17;
+				color: #272b23;
+			}
+
+			.item-list a.active::before {
+				content: "";
+				display: block;
+				position: absolute;
+				height: 10px;
+				width: 10px;
+				background: #14fe17;
+				left: 10px;
+				margin-top: 7px;
+			}
+
+			.item-list a.active:hover {
+				color: #272b23;
+				background: #14fe17;
+			}
+
+			.item-list a.active:hover::before {
+				background: #272b23;
+			}
+
+			.item-stats {
+				position: absolute;
+				right: 10px;
+				bottom: 50px;
+				width: 200px;
+			}
+
+			.pull-right {
+				float: right !important;
+			}
+
+			.pull-left {
+				float: left !important;
+			}
+
+			.item-stats .row .col-12 {
+				background: rgba(16, 255, 0, 0.15);
+				margin-bottom: 2px;
+				padding: 5px;
+			}
+
+			/* Quests tab styles */
+			.quest-list {
+				list-style: none;
+				padding: 0;
+				margin: 20px;
+			}
+
+			.quest-list li {
+				padding: 8px 15px;
+				margin-bottom: 5px;
+				position: relative;
+				padding-left: 30px;
+			}
+
+			.quest-list li:before {
+				content: "◻";
+				position: absolute;
+				left: 10px;
+			}
+
+			.quest-list li[data-completed="true"]:before {
+				content: "✓";
+				color: #14fe17;
+			}
+
+			.quest-list li[data-completed="true"] {
+				opacity: 0.7;
+				text-decoration: line-through;
+			}
+
+			/* Radio tab styles */
+			.radio-station {
+				padding: 10px 15px;
+				margin: 8px 0;
+				border: 2px solid #14fe17;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				font-size: 18px;
+			}
+
+			.radio-station:hover {
+				background: rgba(20, 254, 23, 0.1);
+				text-shadow: 0 0 5px currentColor;
+			}
+
+			.radio-station.playing {
+				background: #14fe17;
+				color: #272b23;
+				border-color: #14fe17;
+				box-shadow: 0 0 10px #14fe17;
+			}
+
+			#radio-message {
+				margin-top: 20px;
+				padding: 10px;
+				border-top: 1px solid #14fe17;
+				font-style: italic;
+			}
+
+			#now-playing {
+				color: #14fe17;
+				font-weight: bold;
+				font-style: normal;
+			}
+
+			/* Map tab styles */
+.map-container {
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #14fe17;
+    user-select: none; /* Prevent text selection while dragging */
+}
+
+#panorama-view {
+        transition: background-size 0.2s ease, background-position 0.2s ease;
+
+    touch-action: none; /* Essential for touch devices */
+}
+			.map-marker {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				background: #ff3333;
+				border-radius: 50%;
+				transform: translate(-50%, -50%);
+				cursor: pointer; /* Make the markers interactive */
+			}
+
+			.map-marker:hover {
+				transform: translate(-50%, -50%) scale(1.5); /* Enlarge on hover */
+				z-index: 10; /* Bring to front on hover */
+			}
+
+			/* Tooltip styles */
+			.tooltip-inner {
+				background-color: #14fe17;
+				color: #272b23;
+				font-family: Pipboy, monospace;
+			}
+
+			.bs-tooltip-auto[x-placement^=top] .arrow::before, 
+			.bs-tooltip-top .arrow::before {
+				border-top-color: #14fe17;
+			}
+
+			/* Theme selector */
+			.theme-selector {
+				position: fixed;
+				top: 10px;
+				right: 10px;
+				z-index: 10000;
+			}
+
+			.theme-btn {
+				background: transparent;
+				border: 1px solid #14fe17;
+				color: #14fe17;
+				padding: 2px 5px;
+				margin: 0 2px;
+				cursor: pointer;
+			}
+
+			.theme-btn.active {
+				background: #14fe17;
+				color: #272b23;
+			}
+
+			/* CRT effect */
+			.crt-effect {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(rgba(18, 16, 16, 0) 50%, 
+							rgba(0, 0, 0, 0.25) 50%), 
+							linear-gradient(90deg, rgba(255, 0, 0, 0.06), 
+							rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+				z-index: 10000;
+				pointer-events: none;
+				background-size: 100% 2px, 3px 100%;
+			}
+			
+			/* Damage effect */
+			.screen-damage {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(255,0,0,0.1)" stroke-width="1"/></svg>');
+				opacity: 0.3;
+				pointer-events: none;
+				z-index: 10001;
+				display: none;
+			}
+
+			/* Loading message */
+			.loading-message {
+				position: fixed;
+				bottom: 60px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: rgba(0,0,0,0.7);
+				padding: 5px 10px;
+				border: 1px solid #14fe17;
+				z-index: 1000;
+				font-size: 14px;
+				color: #14fe17;
+			}
+
+			/* Boot sequence */
+			#boot-screen {
+				position: fixed;
+				top: 0; left: 0;
+				width: 100%; height: 100%;
+				background: #0d100d;
+				z-index: 999999;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: opacity 0.6s ease;
+			}
+			#boot-text {
+				color: #14fe17;
+				font-family: Pipboy, monospace;
+				font-size: 14px;
+				white-space: pre;
+				line-height: 1.8;
+				text-shadow: 0 0 6px #14fe17;
+			}
+
+			/* Geiger counter */
+			#rad-counter {
+				color: #ff6666;
+				font-size: 14px;
+			}
+
+			/* Typewriter cursor blink */
+			.typing-done::after {
+				content: '_';
+				animation: blink-cursor 0.8s step-end infinite;
+			}
+			@keyframes blink-cursor {
+				0%, 100% { opacity: 1; }
+				50% { opacity: 0; }
+			}
+
+			/* Scanline intensity on hover over Vault Boy */
+			.vault-boy:hover {
+				animation: vaultboy-wink 0.4s steps(2) 1;
+			}
+			@keyframes vaultboy-wink {
+				0%   { opacity: 1; }
+				50%  { opacity: 0.3; }
+				100% { opacity: 1; }
+			}
+
+			/* ── Mobile (≤576px phones) ── */
+			@media (max-width: 576px) {
+				/* Navbar: shrink font, allow horizontal scroll */
+				.navbar {
+					margin: 0 4px;
+					overflow-x: auto;
+					-webkit-overflow-scrolling: touch;
+				}
+				.navbar-nav {
+					flex-wrap: nowrap;
+					min-width: max-content;
+				}
+				ul>li.nav-item>a.nav-link,
+				ul>li.nav-item.active>a.nav-link,
+				.navbar-light ul.navbar-nav>li.nav-item>.nav-link,
+				.navbar-light ul.navbar-nav>li.nav-item.active>.nav-link {
+					font-size: 18px !important;
+					line-height: 18px;
+					padding: 6px 8px;
+				}
+				.navbar.navbar-light .navbar-nav {
+					margin: 0 4px;
+				}
+				.navbar.navbar-light .navbar-nav>li {
+					padding: 0 4px;
+				}
+
+				/* Sub-tabs: horizontal scroll */
+				.nav.nav-tabs {
+					flex-wrap: nowrap;
+					overflow-x: auto;
+					-webkit-overflow-scrolling: touch;
+					margin: 8px 4px;
+				}
+				.nav.nav-tabs>li { flex-shrink: 0; }
+				.nav.nav-tabs>li>a {
+					font-size: 18px !important;
+					padding: 4px 10px;
+				}
+
+				/* Vault Boy: flow naturally instead of absolute */
+				.center-image {
+					position: static;
+					margin: 0;
+					text-align: center;
+				}
+				.center-image img {
+					max-height: 130px;
+					margin: 8px auto;
+					display: block;
+				}
+
+				/* Item list links: no fixed width */
+				.item-list li a { width: auto; }
+
+				/* Item stats: out of absolute, flow below lists */
+				.item-stats {
+					position: static;
+					width: 100%;
+					margin-top: 12px;
+				}
+
+				/* Footer: smaller so all three values fit */
+				.pip-footer { font-size: 13px; }
+
+				/* Map: shorter on small screens */
+				#panorama-view { height: 220px !important; }
+
+				/* Boot text: smaller */
+				#boot-text { font-size: 11px; line-height: 1.5; }
+			}
+
+			/* Amber theme */
+			body.amber-theme {
+				color: #ff9e00;
+			}
+			
+			body.amber-theme .navbar {
+				border-bottom-color: #ff9e00;
+			}
+			
+			body.amber-theme .navbar.navbar-light:before,
+			body.amber-theme .navbar.navbar-light:after {
+				background: #ff9e00;
+			}
+			
+			body.amber-theme ul>li.nav-item>a.nav-link,
+			body.amber-theme ul>li.nav-item.active>a.nav-link {
+				color: #ff9e00 !important;
+			}
+			
+			body.amber-theme .level-progress {
+				border-color: #ff9e00;
+			}
+			
+			body.amber-theme .level-progress-indicator {
+				background: #ff9e00;
+			}
+			
+			body.amber-theme .item-list li a {
+				color: #ff9e00;
+			}
+			
+			body.amber-theme .item-list li a:hover {
+				background: #ff9e00;
+				color: #272b23;
+			}
+
+			/* Blue theme */
+			body.blue-theme {
+				color: #00a8ff;
+			}
+			
+			body.blue-theme .navbar {
+				border-bottom-color: #00a8ff;
+			}
+			
+			body.blue-theme .navbar.navbar-light:before,
+			body.blue-theme .navbar.navbar-light:after {
+				background: #00a8ff;
+			}
+			
+			body.blue-theme ul>li.nav-item>a.nav-link,
+			body.blue-theme ul>li.nav-item.active>a.nav-link {
+				color: #00a8ff !important;
+			}
+			
+			body.blue-theme .level-progress {
+				border-color: #00a8ff;
+			}
+			
+			body.blue-theme .level-progress-indicator {
+				background: #00a8ff;
+			}
+			
+			body.blue-theme .item-list li a {
+				color: #00a8ff;
+			}
+			
+			body.blue-theme .item-list li a:hover {
+				background: #00a8ff;
+				color: #272b23;
+			}
+
+		</style>
+	</head>
+	<body class="green-theme">
+		<div id="boot-screen">
+			<pre id="boot-text"></pre>
+		</div>
+		<div class="theme-selector">
+			<button class="theme-btn active" data-theme="green">GREEN</button>
+			<button class="theme-btn" data-theme="amber">AMBER</button>
+			<button class="theme-btn" data-theme="blue">BLUE</button>
+		</div>
+		<div class="crt-effect"></div>
+		<div class="screen-damage"></div>
+		<nav class="navbar navbar-expand navbar-light">
+			<div class="collapse navbar-collapse" id="main">
+				<ul class="navbar-nav nav-fill">
+					<li class="nav-item">
+						<a href="#status" class="nav-link active">STATUS</a>
+					</li>
+					<li class="nav-item">
+						<a href="#inventory" class="nav-link">INV</a>
+					</li>
+					<li class="nav-item">
+						<a href="#data" class="nav-link">DATA</a>
+					</li>
+					<li class="nav-item">
+						<a href="#map" class="nav-link">MAP</a>
+					</li>
+					<li class="nav-item">
+						<a href="#radio" class="nav-link">RADIO</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-12">
+					<ul class="nav nav-tabs" id="mainTabs">
+						<li class="nav-item">
+							<a href="#status" class="nav-link active">STATUS</a>
+						</li>
+						<li class="nav-item">
+							<a href="#special" class="nav-link">SPECIAL</a>
+						</li>
+						<li class="nav-item">
+							<a href="#perks" class="nav-link">PERKS</a>
+						</li>
+						<li class="nav-item">
+							<a href="#quests" class="nav-link">QUESTS</a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane active" id="status" role="tabpanel">
+							<div class="center-image">
+								<svg viewBox="0 0 200 280" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+									<!-- Boots -->
+									<ellipse cx="77" cy="272" rx="14" ry="6" fill="currentColor" fill-opacity="0.3" stroke-width="1.5"/>
+									<ellipse cx="123" cy="272" rx="14" ry="6" fill="currentColor" fill-opacity="0.3" stroke-width="1.5"/>
+									<!-- Legs -->
+									<path d="M85,240 L75,270" stroke-width="10"/>
+									<path d="M115,240 L125,270" stroke-width="10"/>
+									<!-- Body/Jumpsuit -->
+									<path d="M67,155 Q62,195 72,240 L128,240 Q138,195 133,155 Z" fill="currentColor" fill-opacity="0.1" stroke-width="2.5"/>
+									<!-- Suit zipper -->
+									<line x1="100" y1="158" x2="100" y2="238" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+									<!-- Belt -->
+									<rect x="68" y="198" width="64" height="10" rx="2" fill="currentColor" fill-opacity="0.25" stroke-width="1.5"/>
+									<rect x="93" y="198" width="14" height="10" rx="1" fill="currentColor" fill-opacity="0.5" stroke-width="1.5"/>
+									<!-- Chest badge -->
+									<rect x="78" y="165" width="44" height="26" rx="3" fill="currentColor" fill-opacity="0.15" stroke-width="1.5"/>
+									<text x="100" y="182" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace" font-weight="bold">111</text>
+									<!-- Neck -->
+									<rect x="88" y="138" width="24" height="20" rx="5" fill="currentColor" fill-opacity="0.1" stroke-width="2"/>
+									<!-- Left arm — thumbs up -->
+									<path d="M67,175 Q42,160 30,140" stroke-width="10"/>
+									<rect x="16" y="118" width="26" height="22" rx="8" fill="currentColor" fill-opacity="0.12" stroke-width="2"/>
+									<path d="M30,118 Q28,100 34,94 Q42,88 46,98 L46,118" stroke-width="4"/>
+									<!-- Pip-Boy on left wrist -->
+									<rect x="20" y="128" width="22" height="14" rx="3" fill="currentColor" fill-opacity="0.25" stroke-width="1.5"/>
+									<rect x="22" y="130" width="18" height="10" rx="1" fill="currentColor" fill-opacity="0.2" stroke-width="1"/>
+									<line x1="24" y1="133" x2="38" y2="133" stroke-width="1" opacity="0.6"/>
+									<line x1="24" y1="136" x2="38" y2="136" stroke-width="1" opacity="0.6"/>
+									<!-- Right arm — relaxed -->
+									<path d="M133,175 Q158,188 165,210" stroke-width="10"/>
+									<circle cx="167" cy="218" r="13" fill="currentColor" fill-opacity="0.1" stroke-width="2"/>
+									<!-- Head -->
+									<circle cx="100" cy="88" r="54" fill="currentColor" fill-opacity="0.1" stroke-width="3"/>
+									<!-- Hat brim -->
+									<path d="M48,56 Q100,46 152,56" stroke-width="4.5"/>
+									<!-- Hat body -->
+									<path d="M55,56 Q60,28 100,24 Q140,28 145,56 Z" fill="currentColor" fill-opacity="0.2" stroke-width="2"/>
+									<text x="100" y="50" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.9">111</text>
+									<!-- Left eye -->
+									<ellipse cx="76" cy="88" rx="14" ry="16" fill="currentColor" fill-opacity="0.08" stroke-width="2.5"/>
+									<ellipse cx="76" cy="91" rx="9" ry="10" fill="currentColor" fill-opacity="0.7"/>
+									<circle cx="79" cy="88" r="3" fill="#272b23"/>
+									<!-- Right eye -->
+									<ellipse cx="124" cy="88" rx="14" ry="16" fill="currentColor" fill-opacity="0.08" stroke-width="2.5"/>
+									<ellipse cx="124" cy="91" rx="9" ry="10" fill="currentColor" fill-opacity="0.7"/>
+									<circle cx="127" cy="88" r="3" fill="#272b23"/>
+									<!-- Eyebrows -->
+									<path d="M63,74 Q76,68 87,74" stroke-width="4"/>
+									<path d="M113,74 Q124,68 137,74" stroke-width="4"/>
+									<!-- Cheeks -->
+									<ellipse cx="60" cy="108" rx="10" ry="6" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+									<ellipse cx="140" cy="108" rx="10" ry="6" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+									<!-- Nose -->
+									<path d="M96,105 Q100,114 104,105" stroke-width="2.5"/>
+									<!-- Big smile -->
+									<path d="M68,120 Q100,148 132,120" stroke-width="3.5"/>
+									<!-- Teeth -->
+									<line x1="77" y1="123" x2="77" y2="133" stroke-width="2.5"/>
+									<line x1="87" y1="128" x2="87" y2="138" stroke-width="2.5"/>
+									<line x1="100" y1="130" x2="100" y2="140" stroke-width="2.5"/>
+									<line x1="113" y1="128" x2="113" y2="138" stroke-width="2.5"/>
+									<line x1="123" y1="123" x2="123" y2="133" stroke-width="2.5"/>
+								</svg>
+							</div>
+							<div class="stat-bars">
+								<div class="row">
+									<div class="col-12">
+										<div class="stat-bar" data-toggle="tooltip" title="HP: 90/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w90" data-value="90"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									 <div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="AP: 70/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w70" data-value="70"></div>
+											</div>
+										</div>
+									</div>
+									<div class="col-6"></div>
+									<div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="RADs: 60/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w60" data-value="60"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-3">
+										<div class="stat-bar critical" data-toggle="tooltip" title="H20: 20/100 - Critical!">
+											<div class="level-progress">
+												<div class="level-progress-indicator w20" data-value="20"></div>
+											</div>
+										</div>
+									</div>
+									<div class="col-6"></div>
+									 <div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="FOOD: 80/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w80" data-value="80"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-12">
+										<div class="stat-bar" data-toggle="tooltip" title="XP: 50/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w50" data-value="50"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row stat-numbers">
+								<div class="col-2 transparent"></div>
+								<div class="col-2">
+									<!-- Pistol SVG -->
+									<svg class="stat-icon" viewBox="0 0 44 32" fill="currentColor" stroke="none">
+										<path d="M4,20 L4,9 L30,9 L30,14 L36,14 L36,20 Z"/>
+										<rect x="4" y="20" width="15" height="7" rx="2.5"/>
+										<path d="M36,14 L43,14" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/>
+										<path d="M17,20 Q19,26 24,26 Q29,26 30,20" fill="none" stroke="currentColor" stroke-width="1.5"/>
+										<line x1="22" y1="20" x2="23" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+									</svg>
+								</div>
+								<div class="col-1">
+									<div class="icon">
+										<!-- Crosshair SVG -->
+										<svg class="sm-icon" viewBox="0 0 20 20" fill="currentColor" stroke="none">
+											<circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+											<circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+											<line x1="10" y1="1" x2="10" y2="5" stroke="currentColor" stroke-width="1.5"/>
+											<line x1="10" y1="15" x2="10" y2="19" stroke="currentColor" stroke-width="1.5"/>
+											<line x1="1" y1="10" x2="5" y2="10" stroke="currentColor" stroke-width="1.5"/>
+											<line x1="15" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5"/>
+										</svg>
+									</div>
+									<div class="points">18</div>
+								</div>
+								<div class="col-1"></div>
+								<div class="col-2">
+									<!-- Helmet SVG -->
+									<svg class="stat-icon" viewBox="0 0 44 38" fill="currentColor" stroke="none">
+										<path d="M8,28 Q8,8 22,6 Q36,8 36,28 Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2.5"/>
+										<path d="M4,28 Q22,33 40,28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+										<path d="M10,20 Q22,16 34,20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+										<path d="M8,28 Q10,35 15,36 L29,36 Q34,35 36,28" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+									</svg>
+								</div>
+								<div class="col-1">
+									<div class="icon">
+										<!-- Lightning bolt SVG -->
+										<svg class="sm-icon" viewBox="0 0 14 22" fill="currentColor" stroke="none">
+											<polygon points="9,0 1,12 7,12 5,22 13,8 7,8"/>
+										</svg>
+									</div>
+									<div class="points">5</div>
+								</div>
+								<div class="col-1">
+									<div class="icon">
+										<!-- Radiation trefoil SVG -->
+										<svg class="sm-icon" viewBox="0 0 20 20" fill="currentColor" stroke="none">
+											<path d="M10,10 L5.5,2.2 A9,9,0,0,1,14.5,2.2 Z"/>
+											<path d="M10,10 L19,10 A9,9,0,0,1,14.5,17.8 Z"/>
+											<path d="M10,10 L5.5,17.8 A9,9,0,0,1,1,10 Z"/>
+											<circle cx="10" cy="10" r="3.2" fill="#272b23"/>
+											<circle cx="10" cy="10" r="1.8" fill="currentColor"/>
+											<circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="0.8"/>
+										</svg>
+									</div>
+									<div class="points">12</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="special" role="tabpanel">
+							<div class="row">
+								<div class="col-md-6">
+									<h3 class="text-center">SPECIAL</h3>
+									<div class="special-stats">
+										<div class="row mb-3">
+											<div class="col-5">Strength:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="strength" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="strength" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="strength" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Perception:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="perception" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="perception" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="perception" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Endurance:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="endurance" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="endurance" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="endurance" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Charisma:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="charisma" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="charisma" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="charisma" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Intelligence:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="intelligence" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="intelligence" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="intelligence" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Agility:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="agility" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="agility" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="agility" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Luck:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="luck" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="luck" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="luck" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="text-center" id="special-panels">
+
+										<!-- STRENGTH -->
+										<svg id="special-svg-strength" class="special-svg active" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M75,170 L65,118 Q62,88 80,76 Q100,66 120,80 Q135,94 128,124 L118,170 Z" fill="currentColor" fill-opacity="0.12" stroke-width="2.5"/>
+											<ellipse cx="96" cy="94" rx="28" ry="22" fill="currentColor" fill-opacity="0.25" stroke-width="2"/>
+											<path d="M65,118 Q48,128 42,158 L70,168 Q80,144 80,124" fill="currentColor" fill-opacity="0.1" stroke-width="2"/>
+											<rect x="28" y="155" width="46" height="28" rx="9" fill="currentColor" fill-opacity="0.15" stroke-width="2.5"/>
+											<line x1="116" y1="74" x2="162" y2="52" stroke-width="5" stroke-linecap="round"/>
+											<rect x="106" y="60" width="14" height="30" rx="3" fill="currentColor" fill-opacity="0.5" stroke-width="2"/>
+											<rect x="158" y="38" width="14" height="30" rx="3" fill="currentColor" fill-opacity="0.5" stroke-width="2"/>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">STRENGTH</text>
+										</svg>
+
+										<!-- PERCEPTION -->
+										<svg id="special-svg-perception" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round">
+											<path d="M18,96 Q100,38 182,96 Q100,154 18,96 Z" fill="currentColor" fill-opacity="0.08" stroke-width="2.5"/>
+											<circle cx="100" cy="96" r="30" fill="currentColor" fill-opacity="0.15" stroke-width="2.5"/>
+											<circle cx="100" cy="96" r="14" fill="currentColor" fill-opacity="0.55"/>
+											<circle cx="107" cy="90" r="4" fill="#272b23" stroke="none"/>
+											<line x1="100" y1="58" x2="100" y2="28" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+											<line x1="100" y1="134" x2="100" y2="164" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+											<line x1="140" y1="96" x2="170" y2="96" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+											<line x1="60" y1="96" x2="30" y2="96" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+											<line x1="122" y1="74" x2="144" y2="52" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+											<line x1="78" y1="74" x2="56" y2="52" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+											<line x1="122" y1="118" x2="144" y2="140" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+											<line x1="78" y1="118" x2="56" y2="140" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+											<path d="M66,66 A46,46,0,0,1,134,66" stroke-width="2" fill="none" opacity="0.6"/>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">PERCEPTION</text>
+										</svg>
+
+										<!-- ENDURANCE -->
+										<svg id="special-svg-endurance" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M100,168 Q50,142 40,100 L40,64 Q70,54 100,38 Q130,54 160,64 L160,100 Q150,142 100,168 Z" fill="currentColor" fill-opacity="0.1" stroke-width="2.5"/>
+											<line x1="100" y1="38" x2="100" y2="168" stroke-width="1.5" opacity="0.35"/>
+											<line x1="40" y1="96" x2="160" y2="96" stroke-width="1.5" opacity="0.35"/>
+											<path d="M100,134 Q72,116 65,98 Q58,80 72,71 Q86,62 100,79 Q114,62 128,71 Q142,80 135,98 Q128,116 100,134 Z" fill="currentColor" fill-opacity="0.4" stroke-width="2.5"/>
+											<circle cx="55" cy="74" r="4" fill="currentColor" fill-opacity="0.5" stroke-width="1.5"/>
+											<circle cx="145" cy="74" r="4" fill="currentColor" fill-opacity="0.5" stroke-width="1.5"/>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">ENDURANCE</text>
+										</svg>
+
+										<!-- CHARISMA -->
+										<svg id="special-svg-charisma" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M28,38 Q28,18 50,18 L150,18 Q172,18 172,38 L172,100 Q172,122 150,122 L104,122 L82,154 L86,122 L50,122 Q28,122 28,100 Z" fill="currentColor" fill-opacity="0.1" stroke-width="2.5"/>
+											<ellipse cx="158" cy="144" rx="24" ry="18" fill="currentColor" fill-opacity="0.08" stroke-width="1.8"/>
+											<circle cx="140" cy="160" r="9" fill="currentColor" fill-opacity="0.08" stroke-width="1.5"/>
+											<polygon points="100,36 107,62 134,62 113,78 121,104 100,88 79,104 87,78 66,62 93,62" fill="currentColor" fill-opacity="0.55" stroke-width="1.5"/>
+											<circle cx="158" cy="144" r="6" fill="currentColor" fill-opacity="0.5" stroke="none"/>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">CHARISMA</text>
+										</svg>
+
+										<!-- INTELLIGENCE -->
+										<svg id="special-svg-intelligence" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M100,158 Q58,158 40,136 Q22,114 26,88 Q30,62 50,52 Q70,42 84,54 Q90,32 100,32" stroke-width="3" fill="currentColor" fill-opacity="0.1"/>
+											<path d="M100,32 Q110,32 116,54 Q130,42 150,52 Q170,62 174,88 Q178,114 160,136 Q142,158 100,158" stroke-width="3" fill="currentColor" fill-opacity="0.1"/>
+											<line x1="100" y1="32" x2="100" y2="158" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.45"/>
+											<path d="M46,92 Q58,82 68,92 Q78,102 66,110" stroke-width="2" opacity="0.7"/>
+											<path d="M38,112 Q50,104 56,114 Q62,124 52,130" stroke-width="2" opacity="0.7"/>
+											<path d="M154,92 Q142,82 132,92 Q122,102 134,110" stroke-width="2" opacity="0.7"/>
+											<path d="M162,112 Q150,104 144,114 Q138,124 148,130" stroke-width="2" opacity="0.7"/>
+											<polyline points="100,58 84,58 84,74 68,74 68,90" stroke-width="1.5" opacity="0.65"/>
+											<polyline points="100,80 116,80 116,96 132,96" stroke-width="1.5" opacity="0.65"/>
+											<circle cx="84" cy="74" r="3.5" fill="currentColor" opacity="0.75" stroke="none"/>
+											<circle cx="116" cy="96" r="3.5" fill="currentColor" opacity="0.75" stroke="none"/>
+											<circle cx="100" cy="18" r="11" fill="currentColor" fill-opacity="0.2" stroke-width="2"/>
+											<line x1="95" y1="29" x2="95" y2="34" stroke-width="2"/>
+											<line x1="105" y1="29" x2="105" y2="34" stroke-width="2"/>
+											<line x1="100" y1="7" x2="100" y2="2" stroke-width="2"/>
+											<line x1="92" y1="9" x2="88" y2="5" stroke-width="2"/>
+											<line x1="108" y1="9" x2="112" y2="5" stroke-width="2"/>
+											<text x="100" y="196" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">INTELLIGENCE</text>
+										</svg>
+
+										<!-- AGILITY -->
+										<svg id="special-svg-agility" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<line x1="18" y1="54" x2="62" y2="54" stroke-width="2" opacity="0.35"/>
+											<line x1="12" y1="70" x2="58" y2="70" stroke-width="3" opacity="0.5"/>
+											<line x1="18" y1="86" x2="62" y2="86" stroke-width="2" opacity="0.35"/>
+											<line x1="8" y1="102" x2="58" y2="102" stroke-width="3.5" opacity="0.6"/>
+											<line x1="14" y1="118" x2="58" y2="118" stroke-width="2" opacity="0.35"/>
+											<line x1="20" y1="134" x2="60" y2="134" stroke-width="2" opacity="0.25"/>
+											<circle cx="130" cy="40" r="18" fill="currentColor" fill-opacity="0.1" stroke-width="2.5"/>
+											<line x1="130" y1="58" x2="120" y2="110" stroke-width="8"/>
+											<line x1="124" y1="72" x2="158" y2="60" stroke-width="6"/>
+											<line x1="124" y1="82" x2="92" y2="108" stroke-width="6"/>
+											<path d="M120,110 Q130,142 148,162" stroke-width="7" fill="none"/>
+											<path d="M148,162 Q162,170 166,158" stroke-width="5" fill="none"/>
+											<path d="M120,110 Q98,136 82,150" stroke-width="7" fill="none"/>
+											<path d="M82,150 Q70,158 74,168" stroke-width="5" fill="none"/>
+											<path d="M142,28 Q164,22 178,34 Q166,46 154,40" fill="currentColor" fill-opacity="0.3" stroke-width="1.5"/>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">AGILITY</text>
+										</svg>
+
+										<!-- LUCK -->
+										<svg id="special-svg-luck" class="special-svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M54,158 L54,78 Q54,32 100,32 Q146,32 146,78 L146,158" stroke-width="16" stroke-linecap="round"/>
+											<circle cx="68" cy="142" r="8" fill="#272b23" stroke="currentColor" stroke-width="2"/>
+											<circle cx="132" cy="142" r="8" fill="#272b23" stroke="currentColor" stroke-width="2"/>
+											<rect x="76" y="52" width="48" height="48" rx="7" fill="currentColor" fill-opacity="0.12" stroke-width="2.5"/>
+											<circle cx="90" cy="66" r="4.5" fill="currentColor" stroke="none"/>
+											<circle cx="110" cy="66" r="4.5" fill="currentColor" stroke="none"/>
+											<circle cx="90" cy="86" r="4.5" fill="currentColor" stroke="none"/>
+											<circle cx="110" cy="86" r="4.5" fill="currentColor" stroke="none"/>
+											<text x="34" y="54" font-size="18" fill="currentColor" stroke="none" opacity="0.7">★</text>
+											<text x="152" y="52" font-size="15" fill="currentColor" stroke="none" opacity="0.5">★</text>
+											<text x="93" y="24" font-size="13" fill="currentColor" stroke="none" opacity="0.6">★</text>
+											<text x="100" y="196" text-anchor="middle" font-size="15" fill="currentColor" stroke="none" font-family="Pipboy,monospace">LUCK</text>
+										</svg>
+
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="perks" role="tabpanel">
+							<div class="row">
+								<div class="col-md-6">
+									<h3>Perks</h3>
+									<ul class="perk-list">
+										<li data-perk="strong-back">Strong Back (+50 Carry Weight)</li>
+										<li data-perk="lead-belly">Lead Belly (Less radiation from food/drink)</li>
+										<li data-perk="scrounger">Scrounger (More ammo in containers)</li>
+										<li data-perk="hacker">Hacker (Increased hacking skill)</li>
+										<li data-perk="gun-nut">Gun Nut (Gun mods)</li>
+									</ul>
+								</div>
+								<div class="col-md-6">
+									<h4>Perk Details</h4>
+									<div id="perk-details">
+										<p>Select a perk to see its details.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="inventory" role="tabpanel">
+							<div class="row">
+								<div class="col-md-4">
+									<h3>Weapons</h3>
+									<ul class="item-list" id="weapons">
+										<li data-item="44-pistol"><a href="#">.44 Pistol</a></li>
+										<li data-item="combat-shotgun"><a href="#">Combat Shotgun</a></li>
+										<li data-item="hunting-rifle"><a href="#">Hunting Rifle</a></li>
+										<li data-item="laser-rifle"><a href="#">Laser Rifle</a></li>
+										<li data-item="rocket-launcher"><a href="#">Rocket Launcher</a></li>
+									</ul>
+								</div>
+								<div class="col-md-4">
+									<h3>Apparel</h3>
+									<ul class="item-list" id="apparel">
+										<li data-item="vault-suit"><a href="#">Vault Suit</a></li>
+										<li data-item="leather-armor"><a href="#">Leather Armor Set</a></li>
+										<li data-item="metal-armor"><a href="#">Metal Armor Set</a></li>
+										<li data-item="power-armor"><a href="#">Power Armor</a></li>
+									</ul>
+								</div>
+								<div class="col-md-4">
+									<div class="item-stats" id="item-stats">
+										 <div class="row">
+											<div class="col-12">
+												<p>Item Name: </p>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-12">
+												<p>Damage: </p>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-12">
+												<p>Weight: </p>
+											</div>
+										</div>
+										 <div class="row">
+											<div class="col-12">
+												<p>Value: </p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="data" role="tabpanel">
+							<ul class="nav nav-tabs" id="dataTabs">
+								<li class="nav-item">
+									<a href="#holotapes" class="nav-link active" data-toggle="tab">Holotapes</a>
+								</li>
+								<li class="nav-item">
+									<a href="#notes" class="nav-link" data-toggle="tab">Notes</a>
+								</li>
+								<li class="nav-item">
+									 <a href="#codex" class="nav-link" data-toggle="tab">Codex</a>
+								</li>
+							</ul>
+							<div class="tab-content">
+								<div class="tab-pane active" id="holotapes" role="tabpanel">
+									<ul class="item-list">
+										<li data-holotape="entry1"><a href="#">Entry 1: Vault 111</a></li>
+										<li data-holotape="entry2"><a href="#">Entry 2: Sanctuary Hills</a></li>
+										<li data-holotape="entry3"><a href="#">Entry 3: Concord</a></li>
+									</ul>
+									 <div id="holotape-details">
+										<p>Select a holotape to play its entry.</p>
+									</div>
+								</div>
+								<div class="tab-pane" id="notes" role="tabpanel">
+									 <ul class="item-list">
+											<li data-note="note1"><a href="#">Note 1: Mysterious Note</a></li>
+											<li data-note="note2"><a href="#">Note 2:  Journal Entry</a></li>
+									</ul>
+									<div id="note-details">
+										<p>Select a note to read its content.</p>
+									</div>
+								</div>
+								<div class="tab-pane" id="codex" role="tabpanel">
+									<ul class="item-list">
+											<li data-codex="codex1"><a href="#">Codex Entry 1: The Great War</a></li>
+											<li data-codex="codex2"><a href="#">Codex Entry 2:  Factions of the Commonwealth</a></li>
+									</ul>
+									 <div id="codex-details">
+										<p>Select a codex entry to read more.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="map" role="tabpanel">
+    <div class="map-container">
+        <div id="panorama-view">
+            <svg id="map-svg" viewBox="0 0 1400 820" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                    <pattern id="mapgrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M40,0 L0,0 0,40" stroke-width="0.4" opacity="0.2"/>
+                    </pattern>
+                    <pattern id="hazarddots" width="18" height="18" patternUnits="userSpaceOnUse">
+                        <circle cx="9" cy="9" r="1.5" fill="currentColor" opacity="0.35"/>
+                    </pattern>
+                    <pattern id="mtnhatch" width="18" height="18" patternUnits="userSpaceOnUse">
+                        <path d="M0,18 L9,0 L18,18 Z" stroke-width="1" opacity="0.3"/>
+                    </pattern>
+                </defs>
+
+                <!-- Background wash -->
+                <rect width="1400" height="820" fill="currentColor" fill-opacity="0.03"/>
+                <rect width="1400" height="820" fill="url(#mapgrid)"/>
+
+                <!-- Outer frame -->
+                <rect x="12" y="12" width="1376" height="796" stroke-width="3" opacity="0.6"/>
+                <rect x="20" y="20" width="1360" height="780" stroke-width="1" opacity="0.25"/>
+
+                <!-- Mountain range top-left -->
+                <rect x="30" y="30" width="480" height="100" fill="url(#mtnhatch)"/>
+                <path d="M30,130 L90,60 L140,110 L200,50 L260,115 L320,45 L380,120 L440,55 L510,130" stroke-width="2" opacity="0.5"/>
+                <text x="240" y="100" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.45">MOUNTAIN RANGE</text>
+
+                <!-- Glowing Sea hazard zone -->
+                <ellipse cx="1080" cy="680" rx="290" ry="130" fill="currentColor" fill-opacity="0.07"/>
+                <ellipse cx="1080" cy="680" rx="290" ry="130" fill="url(#hazarddots)" opacity="0.9"/>
+                <ellipse cx="1080" cy="680" rx="290" ry="130" stroke-width="1.5" stroke-dasharray="8,5" opacity="0.4"/>
+                <text x="1080" y="676" text-anchor="middle" font-size="16" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.75">THE GLOWING SEA</text>
+                <text x="1080" y="698" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.5">[EXTREME RADIATION ZONE]</text>
+
+                <!-- Charles River -->
+                <path d="M240,60 Q280,120 270,240 Q260,330 400,400 Q520,450 650,428 Q760,400 850,445 Q950,490 1010,540" stroke-width="14" opacity="0.18"/>
+                <path d="M240,60 Q280,120 270,240 Q260,330 400,400 Q520,450 650,428 Q760,400 850,445 Q950,490 1010,540" stroke-width="5" opacity="0.55" stroke-dasharray="10,5"/>
+                <text x="530" y="422" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.55" transform="rotate(-6,530,422)">CHARLES RIVER</text>
+
+                <!-- Route 1 highway -->
+                <path d="M100,175 Q240,235 370,275 Q540,318 710,328 Q900,328 1120,355" stroke-width="3.5" opacity="0.4" stroke-dasharray="18,7"/>
+                <text x="600" y="308" font-size="10" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.4">ROUTE 1</text>
+
+                <!-- Route 95 -->
+                <path d="M80,590 Q230,548 420,530 Q580,518 720,545 Q880,572 1030,598" stroke-width="3" opacity="0.35" stroke-dasharray="18,7"/>
+                <text x="550" y="512" font-size="10" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.35">I-95</text>
+
+                <!-- Secondary roads -->
+                <line x1="212" y1="178" x2="212" y2="330" stroke-width="1.5" opacity="0.3" stroke-dasharray="8,6"/>
+                <line x1="590" y1="340" x2="590" y2="230" stroke-width="1.5" opacity="0.3" stroke-dasharray="8,6"/>
+                <line x1="750" y1="338" x2="840" y2="230" stroke-width="1.5" opacity="0.3" stroke-dasharray="8,6"/>
+                <line x1="400" y1="400" x2="590" y2="370" stroke-width="1.5" opacity="0.28" stroke-dasharray="8,6"/>
+
+                <!-- ── LOCATIONS ── -->
+
+                <!-- SANCTUARY HILLS -->
+                <g transform="translate(210,148)">
+                    <polygon points="0,-12 10,0 0,12 -10,0" fill="currentColor" fill-opacity="0.75"/>
+                    <circle cx="0" cy="0" r="18" stroke-width="1.5" opacity="0.4"/>
+                    <text x="0" y="32" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">SANCTUARY HILLS</text>
+                </g>
+
+                <!-- VAULT 111 -->
+                <g transform="translate(470,108)">
+                    <rect x="-12" y="-12" width="24" height="24" rx="4" fill="currentColor" fill-opacity="0.55" stroke-width="2"/>
+                    <text x="0" y="5" text-anchor="middle" font-size="11" fill="#272b23" stroke="none" font-family="Pipboy,monospace" font-weight="bold">V</text>
+                    <text x="0" y="34" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">VAULT 111</text>
+                </g>
+
+                <!-- CONCORD -->
+                <g transform="translate(205,310)">
+                    <polygon points="0,-10 8,0 0,10 -8,0" fill="currentColor" fill-opacity="0.75"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">CONCORD</text>
+                </g>
+
+                <!-- LEXINGTON -->
+                <g transform="translate(395,282)">
+                    <polygon points="0,-10 8,0 0,10 -8,0" fill="currentColor" fill-opacity="0.75"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">LEXINGTON</text>
+                </g>
+
+                <!-- CORVEGA -->
+                <g transform="translate(290,368)">
+                    <rect x="-8" y="-8" width="16" height="16" fill="currentColor" fill-opacity="0.45" stroke-width="1.5"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.8">CORVEGA</text>
+                </g>
+
+                <!-- DIAMOND CITY (main hub — double ring) -->
+                <g transform="translate(618,370)">
+                    <circle cx="0" cy="0" r="32" stroke-width="2" opacity="0.4"/>
+                    <circle cx="0" cy="0" r="22" stroke-width="2"/>
+                    <polygon points="0,-16 12,0 0,16 -12,0" fill="currentColor"/>
+                    <text x="0" y="46" text-anchor="middle" font-size="16" fill="currentColor" stroke="none" font-family="Pipboy,monospace" font-weight="bold">DIAMOND CITY</text>
+                    <text x="0" y="64" text-anchor="middle" font-size="10" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.7">[MAJOR SETTLEMENT]</text>
+                </g>
+
+                <!-- GOODNEIGHBOR -->
+                <g transform="translate(808,348)">
+                    <polygon points="0,-11 9,0 0,11 -9,0" fill="currentColor" fill-opacity="0.75"/>
+                    <text x="0" y="28" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">GOODNEIGHBOR</text>
+                </g>
+
+                <!-- COVENANT -->
+                <g transform="translate(1010,218)">
+                    <polygon points="0,-10 8,0 0,10 -8,0" fill="currentColor" fill-opacity="0.75"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">COVENANT</text>
+                </g>
+
+                <!-- NUKA-WORLD -->
+                <g transform="translate(72,490)">
+                    <polygon points="0,-10 8,0 0,10 -8,0" fill="currentColor" fill-opacity="0.75"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">NUKA-WORLD</text>
+                </g>
+
+                <!-- SPECTACLE ISLAND -->
+                <g transform="translate(1140,440)">
+                    <ellipse cx="0" cy="0" rx="36" ry="16" fill="currentColor" fill-opacity="0.1" stroke-width="1.5"/>
+                    <text x="0" y="5" text-anchor="middle" font-size="10" fill="currentColor" stroke="none" font-family="Pipboy,monospace">SPECTACLE IS.</text>
+                </g>
+
+                <!-- GUNNER OUTPOST -->
+                <g transform="translate(660,548)">
+                    <rect x="-8" y="-8" width="16" height="16" fill="currentColor" fill-opacity="0.35" stroke-width="1.5"/>
+                    <text x="0" y="26" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.75">GUNNER PLAZA</text>
+                </g>
+
+                <!-- MAP TITLE -->
+                <text x="700" y="60" text-anchor="middle" font-size="22" fill="currentColor" stroke="none" font-family="Pipboy,monospace" opacity="0.9">THE COMMONWEALTH</text>
+                <line x1="460" y1="70" x2="940" y2="70" stroke-width="1" opacity="0.35"/>
+
+                <!-- COMPASS ROSE -->
+                <g transform="translate(1298,730)">
+                    <circle cx="0" cy="0" r="44" stroke-width="1.5" opacity="0.45"/>
+                    <circle cx="0" cy="0" r="5" fill="currentColor" stroke="none"/>
+                    <polygon points="0,-44 -6,-24 6,-24" fill="currentColor"/>
+                    <polygon points="0,44 -6,24 6,24" fill="currentColor" fill-opacity="0.45"/>
+                    <polygon points="44,0 24,-6 24,6" fill="currentColor" fill-opacity="0.45"/>
+                    <polygon points="-44,0 -24,-6 -24,6" fill="currentColor" fill-opacity="0.45"/>
+                    <text x="0" y="-50" text-anchor="middle" font-size="13" fill="currentColor" stroke="none" font-family="Pipboy,monospace">N</text>
+                    <text x="0" y="62" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">S</text>
+                    <text x="58" y="5" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">E</text>
+                    <text x="-58" y="5" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-family="Pipboy,monospace">W</text>
+                </g>
+
+                <!-- SCALE BAR -->
+                <g transform="translate(36,786)">
+                    <line x1="0" y1="0" x2="160" y2="0" stroke-width="2"/>
+                    <line x1="0" y1="-5" x2="0" y2="5" stroke-width="2"/>
+                    <line x1="80" y1="-3" x2="80" y2="3" stroke-width="1.5"/>
+                    <line x1="160" y1="-5" x2="160" y2="5" stroke-width="2"/>
+                    <text x="80" y="-10" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" font-family="Pipboy,monospace">50 km</text>
+                </g>
+
+                <!-- PLAYER POSITION pulse at Diamond City -->
+                <g transform="translate(618,370)">
+                    <circle cx="0" cy="0" r="6" fill="#272b23" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="0" cy="0" r="12" stroke-width="1.5" opacity="0.6" fill="none">
+                        <animate attributeName="r" values="12;26;12" dur="2.2s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.6;0;0.6" dur="2.2s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+            </svg>
+        </div>
+    </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-pipboy" id="zoomIn">Zoom In</button>
+        <button class="btn btn-pipboy" id="zoomOut">Zoom Out</button>
+        <button class="btn btn-pipboy" id="resetMap">Reset</button>
+    </div>
+</div>
+						<div class="tab-pane" id="quests" role="tabpanel">
+							<ul class="quest-list">
+								<li data-quest="quest1">Main Quest: Out of Time</li>
+								<li data-quest="quest2" data-completed="true">Side Quest: Sanctuary</li>
+								<li data-quest="quest3">Side Quest: Jewel of the Commonwealth</li>
+							</ul>
+							 <div id="quest-details">
+								<p>Select a quest to see its details.</p>
+							</div>
+						</div>
+					<div class="tab-pane" id="radio" role="tabpanel">
+    <div class="radio-station playing" data-station="diamond-city-radio"
+         data-soundcloud="https://api.soundcloud.com/tracks/233955191">
+        Diamond City Radio
+    </div>
+    <div class="radio-station" data-station="freedom-radio" 
+         data-soundcloud="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/123456789&color=%23ff5500&auto_play=true">
+        Radio Freedom
+    </div>
+    <div class="radio-station" data-station="classical-radio" 
+         data-soundcloud="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/987654321&color=%23ff5500&auto_play=true">
+        Classical Radio
+    </div>
+    
+    <div id="radio-message">
+        <p>Now Playing: <span id="now-playing">Diamond City Radio</span></p>
+    </div>
+    
+    <!-- Hidden player container -->
+    <div id="soundcloud-player" style="display:none;"></div>
+</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer class="pip-footer">
+			<div class="text-center">
+				<span id="current-time">00:00 AM</span> | <span id="current-date">MM/DD/YYYY</span> | <span id="rad-counter">RAD: 0</span>
+			</div>
+		</footer>
+		<div class="loading-message" id="loadingMessage">
+			Loading...
+		</div>
+
+		<script src="js/jquery-3.2.1.min.js"></script>
+		<script src="js/bootstrap.bundle.min.js"></script>
+		<script>
+			// Boot sequence
+			(function() {
+				const bootLines = [
+					"RobCo Industries (TM) Termlink Protocol",
+					"CONNECTED",
+					"",
+					"PIP-Boy 3000 Mk IV  v2.5.8",
+					"Copyright 2075-2077 RobCo Industries",
+					"",
+					"  [OK] Geiger counter module",
+					"  [OK] Radio transceiver",
+					"  [OK] Map subsystem",
+					"  [OK] SPECIAL module",
+					"  [OK] Inventory database",
+					"",
+					"Loading user profile... DONE",
+					"Welcome back, VAULT DWELLER."
+				];
+				let li = 0, ci = 0;
+				const el = document.getElementById('boot-text');
+				function typeBoot() {
+					if (li >= bootLines.length) {
+						setTimeout(() => {
+							const bs = document.getElementById('boot-screen');
+							bs.style.opacity = '0';
+							setTimeout(() => bs.style.display = 'none', 600);
+						}, 700);
+						return;
+					}
+					const line = bootLines[li];
+					if (ci < line.length) {
+						el.textContent += line[ci++];
+						setTimeout(typeBoot, 22);
+					} else {
+						el.textContent += '\n';
+						li++; ci = 0;
+						setTimeout(typeBoot, line.length === 0 ? 80 : 55);
+					}
+				}
+				typeBoot();
+			})();
+
+			// Typewriter helper
+			function typeWriter(el, text, speed) {
+				el.removeClass('typing-done').text('');
+				let i = 0;
+				(function type() {
+					if (i < text.length) {
+						el.text(el.text() + text[i++]);
+						setTimeout(type, speed || 18);
+					} else {
+						el.addClass('typing-done');
+					}
+				})();
+			}
+
+			$(document).ready(function() {
+				// Tooltip initialization
+				$('[data-toggle="tooltip"]').tooltip();
+
+				// Unified tab navigation — one function owns all top-level pane switching
+				const mainPaneIds = ['#status','#special','#perks','#inventory','#data','#map','#quests','#radio'];
+
+				function switchTab(targetId) {
+					mainPaneIds.forEach(function(id) { $(id).removeClass('active'); });
+					$(targetId).addClass('active');
+					// Clear all nav active states
+					$('.navbar-nav .nav-link, #mainTabs .nav-link').removeClass('active');
+					$('.navbar-nav .nav-item').removeClass('active');
+					// Top navbar: activate <a> AND <li> (li needed for ::before decoration)
+					var $navLink = $('.navbar-nav a[href="' + targetId + '"]');
+					$navLink.addClass('active').closest('.nav-item').addClass('active');
+					// Sub-tabs: only activate the <a>, never the <li>
+					$('#mainTabs a[href="' + targetId + '"]').addClass('active');
+				}
+
+				// Bind top navbar + sub-tabs (but NOT dataTabs, those are self-contained)
+				$('.navbar-nav a[href^="#"], #mainTabs .nav-link').on('click', function(e) {
+					e.preventDefault();
+					switchTab($(this).attr('href'));
+				});
+
+				// dataTabs (Holotapes / Notes / Codex) keep their own simple toggle
+				$('#dataTabs .nav-link').on('click', function(e) {
+					e.preventDefault();
+					var target = $(this).attr('href');
+					$('#dataTabs .nav-link').removeClass('active');
+					$(this).addClass('active');
+					$('#data .tab-pane').removeClass('active');
+					$(target).addClass('active');
+				});
+
+				// Theme switching
+				$('.theme-btn').on('click', function() {
+					const theme = $(this).data('theme');
+					$('body').removeClass('green-theme amber-theme blue-theme').addClass(theme + '-theme');
+					$('.theme-btn').removeClass('active');
+					$(this).addClass('active');
+				});
+
+				// SPECIAL stats adjustment
+				$('.special-adjust').on('click', function() {
+					const stat = $(this).data('stat');
+					const action = $(this).data('action');
+					const inputField = $(`.special-value[data-stat="${stat}"]`);
+					let value = parseInt(inputField.val());
+
+					if (action === 'increase' && value < 10) {
+						value++;
+					} else if (action === 'decrease' && value > 1) {
+						value--;
+					}
+					inputField.val(value);
+
+					// Show the matching inline SVG panel
+					$('.special-svg').removeClass('active');
+					$('#special-svg-' + stat).addClass('active');
+				});
+
+				// Perk details
+				$('.perk-list li').on('click', function() {
+					const perk = $(this).data('perk');
+					let details = '';
+					switch (perk) {
+						case 'strong-back':
+							details = "Increases your carrying capacity by 50.";
+							break;
+						case 'lead-belly':
+							details = "You take less radiation damage from eating and drinking.";
+							break;
+						case 'scrounger':
+							details = "Increases your chance of finding more ammunition in containers.";
+							break;
+						case 'hacker':
+							details = "Increases your ability to hack into computer terminals.";
+							break;
+						case 'gun-nut':
+							details = "Allows you to craft better gun modifications.";
+							break;
+						default:
+							details = "Select a perk to see its details.";
+					}
+					typeWriter($('#perk-details'), details, 16);
+				});
+
+				 // Inventory item details
+				$('#weapons li, #apparel li').on('click', function() {
+					const item = $(this).data('item');
+					let details = { name: item, damage: '-', weight: '-', value: '-' };
+
+					switch (item) {
+						case '44-pistol':
+							details = { name: '.44 Pistol', damage: '48', weight: '2.9', value: '105' };
+							break;
+						case 'combat-shotgun':
+							details = { name: 'Combat Shotgun', damage: '50', weight: '10.0', value: '230' };
+							break;
+						case 'hunting-rifle':
+							details = { name: 'Hunting Rifle', damage: '70', weight: '7.0', value: '150' };
+							break;
+						case 'laser-rifle':
+							details = { name: 'Laser Rifle', damage: '30', weight: '6.5', value: '320' };
+							break;
+						 case 'rocket-launcher':
+							details = { name: 'Rocket Launcher', damage: '150', weight: '18.5', value: '450' };
+							break;
+						case 'vault-suit':
+							details = { name: 'Vault Suit', damage: '0', weight: '2.0', value: '25' };
+							break;
+						case 'leather-armor':
+							 details = { name: 'Leather Armor Set', damage: '15', weight: '12', value: '80' };
+							break;
+						case 'metal-armor':
+							details = { name: 'Metal Armor Set', damage: '20', weight: '20', value: '120' };
+							break;
+						case 'power-armor':
+							details = { name: 'Power Armor', damage: '50', weight: '50', value: '500' };
+							break;
+						default:
+							details = { name: 'Item Name', damage: '-', weight: '-', value: '-' };
+					}
+
+					const itemStatsDiv = $('#item-stats');
+					itemStatsDiv.html(`
+						<div class="row">
+							<div class="col-12"><p>Name: ${details.name}</p></div>
+						</div>
+						<div class="row">
+							<div class="col-12"><p>Damage: ${details.damage}</p></div>
+						</div>
+						<div class="row">
+							<div class="col-12"><p>Weight: ${details.weight}</p></div>
+						</div>
+						 <div class="row">
+							<div class="col-12"><p>Value: ${details.value}</p></div>
+						</div>
+					`);
+				});
+
+				// Holotape details
+				$('#holotapes li').on('click', function() {
+					const holotape = $(this).data('holotape');
+					let details = '';
+					switch (holotape) {
+						case 'entry1':
+							details = "Entry 1: Audio log from Vault 111, discussing cryo-sleep experiments.";
+							break;
+						case 'entry2':
+							details = "Entry 2: A recording from Sanctuary Hills before the war.";
+							break;
+						case 'entry3':
+							details = "Entry 3: Notes from a survivor in Concord.";
+							break;
+						default:
+							details = "Select a holotape to play its entry.";
+					}
+					typeWriter($('#holotape-details'), details, 20);
+				});
+
+				// Note details
+				$('#notes li').on('click', function() {
+					const note = $(this).data('note');
+					let details = '';
+					switch (note) {
+						case 'note1':
+							details = "A mysterious note with cryptic symbols and a warning.";
+							break;
+						case 'note2':
+							details = "Journal entry of a survivor detailing their struggles.";
+							break;
+						default:
+							details = "Select a note to read its content.";
+					}
+					typeWriter($('#note-details'), details, 20);
+				});
+
+				// Codex details
+				$('#codex li').on('click', function() {
+					const codex = $(this).data('codex');
+					let details = '';
+					switch (codex) {
+						case 'codex1':
+							details = "Codex Entry 1: Details the events of the Great War and its aftermath.";
+							break;
+						case 'codex2':
+							details = "Codex Entry 2: Describes the major factions in the Commonwealth.";
+							break;
+						default:
+							details = "Select a codex entry to read more.";
+					}
+					typeWriter($('#codex-details'), details, 20);
+				});
+
+				// Map location details
+				$('.map-marker').on('click', function() {
+					const location = $(this).data('location');
+					$('#map-location-details').text(`Location: ${location}`);
+				});
+
+				// Quest details
+				$('.quest-list li').on('click', function() {
+					const quest = $(this).data('quest');
+					let details = '';
+					switch (quest) {
+						case 'quest1':
+							details = "Main Quest: Follow the trail of your son.";
+							break;
+						case 'quest2':
+							details = "Side Quest: Help rebuild Sanctuary.";
+							break;
+						case 'quest3':
+							details = "Side Quest: Find the missing jewel.";
+							break;
+						default:
+							details = "Select a quest to see its details.";
+					}
+					typeWriter($('#quest-details'), details, 20);
+				});
+
+				// Radio station selection
+				$('.radio-station').on('click', function() {
+					const station = $(this).data('station');
+					$('.radio-station').removeClass('playing');
+					$(this).addClass('playing');
+					let message = station;
+					switch (station) {
+						case 'diamond-city-radio':
+							message = "Diamond City Radio — Enjoy the tunes of the Commonwealth!";
+							break;
+						case 'freedom-radio':
+							message = "Radio Freedom — For the Minutemen!";
+							break;
+						case 'classical-radio':
+							message = "Classical Radio — Enjoy the finer things in the wasteland.";
+							break;
+					}
+					$('#now-playing').text(message);
+				});
+
+				// Update clock
+				function updateClock() {
+					const now = new Date();
+					const timeStr = now.toLocaleTimeString();
+					const dateStr = now.toLocaleDateString();
+					
+					$('#current-time').text(timeStr);
+					$('#current-date').text(dateStr);
+					
+					// Simulate loading message
+					if ($('#loadingMessage').is(':visible')) {
+						setTimeout(function() {
+							$('#loadingMessage').fadeOut();
+						}, 2000);
+					}
+				}
+				
+				// Initialize clock and update every second
+				updateClock();
+				setInterval(updateClock, 1000);
+
+				// Geiger counter
+				let radBase = Math.floor(Math.random() * 15);
+				function tickGeiger() {
+					radBase += Math.floor(Math.random() * 4) - 1;
+					if (radBase < 0) radBase = 0;
+					if (radBase > 999) radBase = 0;
+					$('#rad-counter').text('RAD: ' + radBase);
+					setTimeout(tickGeiger, 1800 + Math.floor(Math.random() * 2500));
+				}
+				tickGeiger();
+
+				// Simulate screen damage effect randomly
+				setInterval(function() {
+					if (Math.random() > 0.95) {
+						$('.screen-damage').fadeIn(100).delay(300).fadeOut(500);
+					}
+				}, 5000);
+
+				 // Progress bar animation
+				function animateProgressBar() {
+					$('.level-progress-indicator').each(function() {
+						const value = $(this).data('value');
+						$(this).css('width', value + '%');
+					});
+				}
+
+				animateProgressBar();
+			   
+			});
+			document.addEventListener('DOMContentLoaded', function() {
+    const panorama = document.getElementById('panorama-view');
+    const mapSvg  = document.getElementById('map-svg');
+    let isDragging = false;
+    let startPos = { x: 0, y: 0 };
+    let translate = { x: 0, y: 0 };
+    let scale = 1;
+    const minScale = 0.25;
+    const maxScale = 4;
+
+    function updateMapPosition() {
+        mapSvg.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
+        mapSvg.style.transformOrigin = '0 0';
+    }
+
+    panorama.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startPos = { x: e.clientX - translate.x, y: e.clientY - translate.y };
+        panorama.classList.add('grabbing');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translate.x = e.clientX - startPos.x;
+        translate.y = e.clientY - startPos.y;
+        updateMapPosition();
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        panorama.classList.remove('grabbing');
+    });
+
+    panorama.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startPos = { x: e.touches[0].clientX - translate.x, y: e.touches[0].clientY - translate.y };
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        translate.x = e.touches[0].clientX - startPos.x;
+        translate.y = e.touches[0].clientY - startPos.y;
+        updateMapPosition();
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => { isDragging = false; });
+
+    panorama.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = panorama.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const svgX = (mx - translate.x) / scale;
+        const svgY = (my - translate.y) / scale;
+        scale = e.deltaY < 0
+            ? Math.min(scale * 1.1, maxScale)
+            : Math.max(scale / 1.1, minScale);
+        translate.x = mx - svgX * scale;
+        translate.y = my - svgY * scale;
+        updateMapPosition();
+    }, { passive: false });
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        scale = Math.min(scale * 1.25, maxScale);
+        updateMapPosition();
+    });
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        scale = Math.max(scale / 1.25, minScale);
+        updateMapPosition();
+    });
+    document.getElementById('resetMap').addEventListener('click', () => {
+        translate = { x: 0, y: 0 };
+        scale = 1;
+        updateMapPosition();
+    });
+
+    updateMapPosition();
+});
+		</script>
+	</body>
+	</html>
