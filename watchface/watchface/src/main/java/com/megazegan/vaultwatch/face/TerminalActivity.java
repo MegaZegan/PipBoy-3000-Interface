@@ -301,7 +301,7 @@ public class TerminalActivity extends Activity {
             drawFooter(canvas);
             drawScanlines(canvas);
             canvas.restoreToCount(save);
-            postInvalidateDelayed(section == 0 && statPage == 0 ? 125 : 1000);
+            postInvalidateDelayed((section == 0 && statPage == 0) || section == 4 ? 160 : 1000);
         }
 
         @Override
@@ -546,11 +546,10 @@ public class TerminalActivity extends Activity {
         private void drawRadio(Canvas canvas) {
             String[] stations = {"WVR 88.1", "RANGER NET", "CLASSICAL"};
             String[] states = {"PLAY", "SYNC", "OPEN"};
-            drawThemedMovie(canvas, radioWavesGif, 174, 172, 102, 102, 235);
+            drawThemedMovie(canvas, radioWavesGif, 142, 170, 166, 104, 235);
             for (int i = 0; i < stations.length; i++) {
-                row(canvas, 88, 282 + i * 34, stations[i], states[i], i == selectedStation);
+                row(canvas, 88, 282 + i * 32, stations[i], states[i], i == selectedStation);
             }
-            text(canvas, scannerSignal, 225, 374, 13, dim, Paint.Align.CENTER);
         }
 
         private void drawComms(Canvas canvas) {
