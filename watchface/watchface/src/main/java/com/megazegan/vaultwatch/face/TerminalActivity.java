@@ -177,6 +177,7 @@ public class TerminalActivity extends Activity {
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MM/dd", Locale.US);
         private final Bitmap vaultBoy;
         private final Movie vaultBoyGif;
+        private final Movie radioWavesGif;
         private final Bitmap helmet;
         private final Bitmap bolt;
         private final Bitmap rad;
@@ -248,6 +249,7 @@ public class TerminalActivity extends Activity {
             }
             vaultBoy = loadBitmap(context, "img/imported-pipboy/VaultBoy.png");
             vaultBoyGif = loadMovie(context, "img/imported-pipboy/ezgif-4f3eb3aa896b3f93.gif");
+            radioWavesGif = loadMovie(context, "img/imported-pipboy/radiowaves1.gif");
             helmet = loadBitmap(context, "img/ico/helmet.png");
             bolt = loadBitmap(context, "img/ico/bolt.png");
             rad = loadBitmap(context, "img/ico/radioactive.png");
@@ -544,10 +546,9 @@ public class TerminalActivity extends Activity {
         private void drawRadio(Canvas canvas) {
             String[] stations = {"WVR 88.1", "RANGER NET", "CLASSICAL"};
             String[] states = {"PLAY", "SYNC", "OPEN"};
-            drawBitmap(canvas, rad, 186, 176, 78, 78, text);
-            meterBar(canvas, "SIGNAL", 88, 252, radioSignal, text);
+            drawThemedMovie(canvas, radioWavesGif, 174, 172, 102, 102, 235);
             for (int i = 0; i < stations.length; i++) {
-                row(canvas, 88, 276 + i * 34, stations[i], states[i], i == selectedStation);
+                row(canvas, 88, 282 + i * 34, stations[i], states[i], i == selectedStation);
             }
             text(canvas, scannerSignal, 225, 374, 13, dim, Paint.Align.CENTER);
         }
@@ -896,22 +897,29 @@ public class TerminalActivity extends Activity {
                 drawBitmap(canvas, vaultBoy, x, y, width, height, text);
                 return;
             }
+            drawThemedMovie(canvas, vaultBoyGif, x, y, width, height, 245);
+        }
+
+        private void drawThemedMovie(Canvas canvas, Movie movie, float x, float y, float width, float height, int alpha) {
+            if (movie == null || movie.width() <= 0 || movie.height() <= 0) {
+                return;
+            }
             long now = System.currentTimeMillis();
             if (gifStartTime == 0L) {
                 gifStartTime = now;
             }
-            int duration = vaultBoyGif.duration();
+            int duration = movie.duration();
             if (duration <= 0) {
                 duration = 1200;
             }
-            vaultBoyGif.setTime((int) ((now - gifStartTime) % duration));
+            movie.setTime((int) ((now - gifStartTime) % duration));
             int save = canvas.save();
             canvas.translate(x, y);
-            canvas.scale(width / vaultBoyGif.width(), height / vaultBoyGif.height());
-            paint.setAlpha(245);
+            canvas.scale(width / movie.width(), height / movie.height());
+            paint.setAlpha(alpha);
             paint.setFilterBitmap(true);
             paint.setColorFilter(themeTintFilter());
-            vaultBoyGif.draw(canvas, 0, 0, paint);
+            movie.draw(canvas, 0, 0, paint);
             paint.setAlpha(255);
             paint.setColorFilter(null);
             canvas.restoreToCount(save);

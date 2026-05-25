@@ -81,6 +81,7 @@ def main() -> int:
         root / "img" / "imported-pipboy" / "VaultBoy.png",
         root / "img" / "imported-pipboy" / "ezgif-4f3eb3aa896b3f93.gif",
         root / "img" / "imported-pipboy" / "radiowaves.gif",
+        root / "img" / "imported-pipboy" / "radiowaves1.gif",
         root / "img" / "imported-pipboy" / "startup.mp4",
         root / "watchface" / "settings.gradle.kts",
         root / "watchface" / "README.md",
@@ -91,6 +92,7 @@ def main() -> int:
         root / "watchface" / "watchface" / "src" / "main" / "res" / "drawable-nodpi" / "pipboy_face_bg.png",
         root / "watchface" / "watchface" / "src" / "main" / "res" / "drawable-nodpi" / "preview.png",
         root / "watchface" / "watchface" / "src" / "main" / "assets" / "img" / "imported-pipboy" / "ezgif-4f3eb3aa896b3f93.gif",
+        root / "watchface" / "watchface" / "src" / "main" / "assets" / "img" / "imported-pipboy" / "radiowaves1.gif",
     ]
     missing_watchface = [str(path.relative_to(root)) for path in watchface_required if not path.exists()]
     if missing_watchface:
