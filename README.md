@@ -14,9 +14,9 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 | --- | --- | --- |
 | ![Galaxy Watch 4 inventory screen](docs/screenshots/watch4-inventory.png) | ![Galaxy Watch 4 data screen](docs/screenshots/watch4-data.png) | ![Galaxy Watch 4 map screen](docs/screenshots/watch4-map.png) |
 
-| RAD |
-| --- |
-| ![Galaxy Watch 4 radio screen](docs/screenshots/watch4-radio.png) |
+| DATA / WORKOUT | RAD |
+| --- | --- |
+| ![Galaxy Watch 4 workout data screen](docs/screenshots/watch4-data-workout.png) | ![Galaxy Watch 4 radio screen](docs/screenshots/watch4-radio.png) |
 
 ## Galaxy Watch 4 Features
 
@@ -30,6 +30,7 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 - PERKS page carries status effects, lifestyle readouts, and system/weather flavor.
 - INV uses Pip-Boy style sub-pages: `WEAPONS`, `APPAREL`, `AID`, `MISC`, and `JUNK`, with freshly randomized items whenever a category is tapped.
 - DATA page with randomized quest names, statuses, and notes.
+- DATA uses Pip-Boy style sub-pages: `QUESTS`, `DAILY`, and `WORKOUT`, with quest add/remove controls and watch sensor-backed workout readouts when permissions are granted.
 - MAP page with an in-app Pip-Boy map, GPS-style readout, speed/altitude simulation, then a button to launch Google Maps.
 - RAD page with in-app radio stations, signal scanner, radio noise flavor, then station taps can launch Spotify.
 - Monofonto terminal typography, scanlines, glow, green/orange radiation accents, and round-screen composition.

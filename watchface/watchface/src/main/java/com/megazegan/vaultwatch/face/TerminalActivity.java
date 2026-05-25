@@ -1,8 +1,10 @@
 package com.megazegan.vaultwatch.face;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -17,7 +19,12 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +40,7 @@ import java.util.Random;
 
 public class TerminalActivity extends Activity {
     private PipBoyTerminalView terminalView;
+    private static final int SENSOR_PERMISSION_REQUEST = 3000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +54,7 @@ public class TerminalActivity extends Activity {
         getWindow().setStatusBarColor(Color.BLACK);
         terminalView = new PipBoyTerminalView(this, viewFromIntent(getIntent()));
         setContentView(terminalView);
+        requestWatchSensorPermissions();
         launchExternalSection(viewFromIntent(getIntent()));
     }
 
@@ -60,6 +69,14 @@ public class TerminalActivity extends Activity {
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == SENSOR_PERMISSION_REQUEST && terminalView != null) {
+            terminalView.registerSensors();
+        }
+    }
+
     private int viewFromIntent(Intent intent) {
         Uri data = intent == null ? null : intent.getData();
         String value = data == null ? "" : data.getPath();
@@ -71,6 +88,16 @@ public class TerminalActivity extends Activity {
         if (value.contains("map")) return 3;
         if (value.contains("radio")) return 4;
         return 0;
+    }
+
+    private void requestWatchSensorPermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return;
+        }
+        String[] permissions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                ? new String[]{Manifest.permission.BODY_SENSORS, Manifest.permission.ACTIVITY_RECOGNITION}
+                : new String[]{Manifest.permission.BODY_SENSORS};
+        requestPermissions(permissions, SENSOR_PERMISSION_REQUEST);
     }
 
         private void launchExternalSection(int section) {
@@ -98,9 +125,10 @@ public class TerminalActivity extends Activity {
         return true;
     }
 
-    private static final class PipBoyTerminalView extends View {
+    private static final class PipBoyTerminalView extends View implements SensorEventListener {
         private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD"};
         private static final String[] STAT_TABS = {"STATUS", "SPECIAL", "PERKS"};
+        private static final String[] DATA_TABS = {"QUESTS", "DAILY", "WORKOUT"};
         private static final String[] THEMES = {"GREEN", "AMBER", "BLUE"};
         private static final String[] INV_TABS = {"WEAPONS", "APPAREL", "AID", "MISC", "JUNK"};
         private static final String[][] ITEM_POOLS = {
@@ -148,6 +176,8 @@ public class TerminalActivity extends Activity {
                 "SETTLEMENT REQUEST FLAGGED URGENT"
         };
         private static final String[] QUEST_STATUS = {"ACTIVE", "47%", "NEW", "HOLD", "TRACE", "SYNC", "DONE"};
+        private static final String[] DAILY_LABELS = {"HYDRATE", "MEDS", "STRETCH", "STUDY", "SLEEP"};
+        private static final String[] DAILY_VALUES = {"DUE", "DONE", "SOON", "HOLD", "NEXT"};
         private static final String[] EFFECTS = {
                 "WELL RESTED", "FOCUSED", "CAFFEINATED", "ENERGIZED",
                 "OVER-ENCUMBERED", "LOW POWER MODE", "DEHYDRATED", "SLEEP DEPRIVED"
@@ -175,6 +205,11 @@ public class TerminalActivity extends Activity {
         private final Random random = new Random();
         private final SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MM/dd", Locale.US);
+        private final SensorManager sensorManager;
+        private final Sensor heartSensor;
+        private final Sensor stepCounterSensor;
+        private final Sensor stepDetectorSensor;
+        private final Sensor tempSensor;
         private final Bitmap vaultBoy;
         private final Movie vaultBoyGif;
         private final Movie radioWavesGif;
@@ -187,6 +222,7 @@ public class TerminalActivity extends Activity {
         private int section;
         private int statPage;
         private int inventoryPage;
+        private int dataPage;
         private int selectedInventory;
         private int selectedData;
         private int selectedStation;
@@ -218,6 +254,8 @@ public class TerminalActivity extends Activity {
         private int uvIndex;
         private int nextWater;
         private long lastStatTick;
+        private float stepBaseline = -1f;
+        private boolean sensorsRegistered;
         private String[] inventoryItems = new String[4];
         private String[] inventoryTypes = new String[4];
         private Bitmap[] inventoryIcons = new Bitmap[4];
@@ -225,9 +263,11 @@ public class TerminalActivity extends Activity {
         private int[] inventoryCount = new int[4];
         private int[] inventoryValue = new int[4];
         private int[] inventoryWeight = new int[4];
-        private String[] dataLabels = new String[3];
-        private String[] dataValues = new String[3];
-        private String[] dataNotes = new String[3];
+        private String[] dataLabels = new String[4];
+        private String[] dataValues = new String[4];
+        private String[] dataNotes = new String[4];
+        private String[] dailyValues = new String[DAILY_LABELS.length];
+        private int questCount;
         private int[] special = new int[7];
         private String activeEffect = "WELL RESTED";
         private String scannerSignal = "UNKNOWN SIGNAL";
@@ -242,6 +282,11 @@ public class TerminalActivity extends Activity {
             super(context);
             section = startSection;
             setFocusable(true);
+            sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+            heartSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+            stepCounterSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            stepDetectorSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+            tempSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
             try {
                 font = Typeface.createFromAsset(context.getAssets(), "monofonto.ttf");
             } catch (RuntimeException ignored) {
@@ -257,6 +302,44 @@ public class TerminalActivity extends Activity {
             pipMap = loadBitmap(context, "img/map.webp");
             randomizeSession();
             postInvalidateDelayed(125);
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            registerSensors();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            if (sensorManager != null && sensorsRegistered) {
+                sensorManager.unregisterListener(this);
+                sensorsRegistered = false;
+            }
+            super.onDetachedFromWindow();
+        }
+
+        void registerSensors() {
+            if (sensorManager == null || sensorsRegistered) {
+                return;
+            }
+            Context context = getContext();
+            boolean bodyGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                    || context.checkSelfPermission(Manifest.permission.BODY_SENSORS) == PackageManager.PERMISSION_GRANTED;
+            boolean activityGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                    || context.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+            if (bodyGranted && heartSensor != null) {
+                sensorManager.registerListener(this, heartSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            if (activityGranted && stepCounterSensor != null) {
+                sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            } else if (activityGranted && stepDetectorSensor != null) {
+                sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            if (tempSensor != null) {
+                sensorManager.registerListener(this, tempSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            sensorsRegistered = true;
         }
 
         void setSection(int next) {
@@ -341,8 +424,29 @@ public class TerminalActivity extends Activity {
                 invalidate();
                 return true;
             }
-            if (section == 2 && x >= 72 && x <= 378 && y >= 178 && y <= 300) {
-                selectedData = Math.max(0, Math.min(2, (int) ((y - 178) / 44f)));
+            if (section == 2 && y >= 168 && y <= 198) {
+                dataPage = Math.max(0, Math.min(DATA_TABS.length - 1, (int) ((x - 92) / 89f)));
+                selectedData = 0;
+                if (dataPage == 0) {
+                    randomizeQuestStatuses();
+                } else if (dataPage == 1) {
+                    randomizeDaily();
+                }
+                invalidate();
+                return true;
+            }
+            if (section == 2 && x >= 72 && x <= 378 && y >= 202 && y <= 334) {
+                int maxRow = dataPage == 0 ? Math.max(0, questCount - 1) : dataPage == 1 ? DAILY_LABELS.length - 1 : 4;
+                selectedData = Math.max(0, Math.min(maxRow, (int) ((y - 202) / 30f)));
+                invalidate();
+                return true;
+            }
+            if (section == 2 && dataPage == 0 && y >= 346 && y <= 376) {
+                if (x >= 88 && x <= 148) {
+                    addQuest();
+                } else if (x >= 302 && x <= 362) {
+                    removeQuest();
+                }
                 invalidate();
                 return true;
             }
@@ -487,12 +591,60 @@ public class TerminalActivity extends Activity {
         }
 
         private void drawData(Canvas canvas) {
-            for (int i = 0; i < dataLabels.length; i++) {
-                row(canvas, 72, 178 + i * 44, dataLabels[i], dataValues[i], i == selectedData);
+            drawDataSubTabs(canvas);
+            if (dataPage == 1) {
+                drawDaily(canvas);
+            } else if (dataPage == 2) {
+                drawWorkout(canvas);
+            } else {
+                drawQuests(canvas);
             }
-            rect.set(72, 316, 378, 360);
+        }
+
+        private void drawDataSubTabs(Canvas canvas) {
+            for (int i = 0; i < DATA_TABS.length; i++) {
+                float x = 92 + i * 89f;
+                text(canvas, DATA_TABS[i], x, 188, 18, i == dataPage ? text : themedColor(92, 119, 255, 114), Paint.Align.CENTER);
+            }
+        }
+
+        private void drawQuests(Canvas canvas) {
+            for (int i = 0; i < questCount; i++) {
+                row(canvas, 72, 202 + i * 30, dataLabels[i], dataValues[i], i == selectedData);
+            }
+            rect.set(72, 326, 378, 344);
             box(canvas, rect, false);
-            text(canvas, dataNotes[selectedData], 225, 342, 14, dim, Paint.Align.CENTER);
+            text(canvas, questCount == 0 ? "NO ACTIVE QUESTS" : dataNotes[selectedData], 225, 340, 12, dim, Paint.Align.CENTER);
+            rect.set(88, 350, 148, 374);
+            box(canvas, rect, true);
+            text(canvas, "+ ADD", 118, 367, 13, text, Paint.Align.CENTER);
+            rect.set(302, 350, 362, 374);
+            box(canvas, rect, false);
+            text(canvas, "- DEL", 332, 367, 13, text, Paint.Align.CENTER);
+        }
+
+        private void drawDaily(Canvas canvas) {
+            for (int i = 0; i < DAILY_LABELS.length; i++) {
+                row(canvas, 72, 202 + i * 30, DAILY_LABELS[i], dailyValues[i], i == selectedData);
+            }
+            text(canvas, "TAP DAILY TO RESHUFFLE REMINDERS", 225, 370, 12, dim, Paint.Align.CENTER);
+        }
+
+        private void drawWorkout(Canvas canvas) {
+            String[] labels = {"STEPS", "HEART", "OXYGEN", "TEMP", "WEATHER"};
+            String[] values = {
+                    steps + "",
+                    heartRate + " BPM",
+                    oxygen + "%",
+                    tempSim + "C",
+                    weatherStatus
+            };
+            for (int i = 0; i < labels.length; i++) {
+                row(canvas, 72, 202 + i * 30, labels[i], values[i], false);
+            }
+            String sensorLine = (stepCounterSensor != null || stepDetectorSensor != null ? "STEP SENSOR" : "STEP FALLBACK")
+                    + " / " + (heartSensor != null ? "HR SENSOR" : "HR FALLBACK");
+            text(canvas, sensorLine, 225, 370, 12, dim, Paint.Align.CENTER);
         }
 
         private void drawMap(Canvas canvas) {
@@ -645,7 +797,14 @@ public class TerminalActivity extends Activity {
                 selectedInventory = (selectedInventory + direction + 4) % 4;
                 invalidate();
             } else if (section == 2) {
-                selectedData = (selectedData + direction + 3) % 3;
+                if (dataPage == 0) {
+                    selectedData = questCount == 0 ? 0 : (selectedData + direction + questCount) % questCount;
+                } else {
+                    dataPage = (dataPage + direction + DATA_TABS.length) % DATA_TABS.length;
+                    selectedData = 0;
+                    if (dataPage == 0) randomizeQuestStatuses();
+                    if (dataPage == 1) randomizeDaily();
+                }
                 invalidate();
             } else if (section >= 5) {
                 selectedAux = (selectedAux + direction + 4) % 4;
@@ -690,6 +849,7 @@ public class TerminalActivity extends Activity {
             }
             selectedInventory = 0;
             inventoryPage = 0;
+            dataPage = 0;
             selectedData = 0;
             selectedStation = 0;
             selectedAux = 0;
@@ -699,8 +859,20 @@ public class TerminalActivity extends Activity {
             } else if (hydration < 45) {
                 activeEffect = "DEHYDRATED";
             }
+            questCount = 3;
+            randomizeQuestList();
+            randomizeDaily();
+        }
+
+        private void randomizeQuestList() {
             boolean[] usedQuests = new boolean[QUEST_NAMES.length];
             for (int i = 0; i < dataLabels.length; i++) {
+                if (i >= questCount) {
+                    dataLabels[i] = "";
+                    dataValues[i] = "";
+                    dataNotes[i] = "";
+                    continue;
+                }
                 int index;
                 do {
                     index = random.nextInt(QUEST_NAMES.length);
@@ -709,6 +881,45 @@ public class TerminalActivity extends Activity {
                 dataLabels[i] = QUEST_NAMES[index];
                 dataValues[i] = QUEST_STATUS[random.nextInt(QUEST_STATUS.length)];
                 dataNotes[i] = QUEST_NOTES[random.nextInt(QUEST_NOTES.length)];
+            }
+        }
+
+        private void randomizeQuestStatuses() {
+            for (int i = 0; i < questCount; i++) {
+                dataValues[i] = QUEST_STATUS[random.nextInt(QUEST_STATUS.length)];
+                dataNotes[i] = QUEST_NOTES[random.nextInt(QUEST_NOTES.length)];
+            }
+        }
+
+        private void addQuest() {
+            if (questCount < dataLabels.length) {
+                questCount++;
+                selectedData = questCount - 1;
+            }
+            randomizeQuestList();
+        }
+
+        private void removeQuest() {
+            if (questCount <= 0) {
+                return;
+            }
+            for (int i = selectedData; i < questCount - 1; i++) {
+                dataLabels[i] = dataLabels[i + 1];
+                dataValues[i] = dataValues[i + 1];
+                dataNotes[i] = dataNotes[i + 1];
+            }
+            questCount--;
+            selectedData = Math.max(0, Math.min(selectedData, questCount - 1));
+            if (questCount < dataLabels.length) {
+                dataLabels[questCount] = "";
+                dataValues[questCount] = "";
+                dataNotes[questCount] = "";
+            }
+        }
+
+        private void randomizeDaily() {
+            for (int i = 0; i < dailyValues.length; i++) {
+                dailyValues[i] = DAILY_VALUES[random.nextInt(DAILY_VALUES.length)];
             }
         }
 
@@ -783,6 +994,33 @@ public class TerminalActivity extends Activity {
                     "VAULT PING", "STATIC BURST", "LOCAL BEACON"
             };
             return signals[random.nextInt(signals.length)];
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (event.values.length == 0) {
+                return;
+            }
+            int type = event.sensor.getType();
+            if (type == Sensor.TYPE_HEART_RATE && event.values[0] > 0f) {
+                heartRate = Math.max(35, Math.min(220, Math.round(event.values[0])));
+            } else if (type == Sensor.TYPE_STEP_COUNTER) {
+                if (stepBaseline < 0f) {
+                    stepBaseline = event.values[0];
+                }
+                steps = Math.max(0, Math.round(event.values[0] - stepBaseline));
+            } else if (type == Sensor.TYPE_STEP_DETECTOR) {
+                steps += Math.max(1, Math.round(event.values[0]));
+            } else if (type == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+                tempSim = Math.max(-30, Math.min(60, Math.round(event.values[0])));
+            }
+            if ((section == 2 && dataPage == 2) || section == 0) {
+                invalidate();
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
 
         private void meter(Canvas canvas, Bitmap icon, String label, float x, float y, int value, int color) {
