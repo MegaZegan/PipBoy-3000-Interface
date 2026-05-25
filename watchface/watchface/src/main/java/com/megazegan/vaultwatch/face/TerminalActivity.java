@@ -254,7 +254,6 @@ public class TerminalActivity extends Activity {
         private int uvIndex;
         private int nextWater;
         private long lastStatTick;
-        private float stepBaseline = -1f;
         private boolean sensorsRegistered;
         private String[] inventoryItems = new String[4];
         private String[] inventoryTypes = new String[4];
@@ -1005,10 +1004,7 @@ public class TerminalActivity extends Activity {
             if (type == Sensor.TYPE_HEART_RATE && event.values[0] > 0f) {
                 heartRate = Math.max(35, Math.min(220, Math.round(event.values[0])));
             } else if (type == Sensor.TYPE_STEP_COUNTER) {
-                if (stepBaseline < 0f) {
-                    stepBaseline = event.values[0];
-                }
-                steps = Math.max(0, Math.round(event.values[0] - stepBaseline));
+                steps = Math.max(0, Math.round(event.values[0]));
             } else if (type == Sensor.TYPE_STEP_DETECTOR) {
                 steps += Math.max(1, Math.round(event.values[0]));
             } else if (type == Sensor.TYPE_AMBIENT_TEMPERATURE) {
