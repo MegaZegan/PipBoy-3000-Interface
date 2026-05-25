@@ -14,6 +14,10 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 | --- | --- |
 | ![Galaxy Watch 4 map screen](docs/screenshots/watch4-map.png) | ![Galaxy Watch 4 radio screen](docs/screenshots/watch4-radio.png) |
 
+| Expanded Pip-OS |
+| --- |
+| ![Galaxy Watch 4 expanded system screen](docs/screenshots/watch4-v26-system.png) |
+
 ## Galaxy Watch 4 Features
 
 - Native Wear OS APK built for Galaxy Watch 4 / Wear OS round displays.
