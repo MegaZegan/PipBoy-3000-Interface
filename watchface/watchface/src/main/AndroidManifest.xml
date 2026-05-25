@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+
+    <uses-feature
+        android:name="android.hardware.type.watch"
+        android:required="true" />
+
+    <application
+        android:allowBackup="false"
+        android:hasCode="true"
+        android:label="@string/watch_face_name"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".TerminalActivity"
+            android:exported="true"
+            android:label="@string/terminal_name"
+            android:theme="@style/TerminalTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="vaultwatch"
+                    android:scheme="app" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
+        <property
+            android:name="com.google.wear.watchface.format.version"
+            android:value="2" />
+
+        <meta-data
+            android:name="com.google.android.wearable.watchface.format"
+            android:resource="@raw/watchface" />
+
+        <meta-data
+            android:name="com.google.android.wearable.watchface.info"
+            android:resource="@xml/watch_face_info" />
+    </application>
+</manifest>
