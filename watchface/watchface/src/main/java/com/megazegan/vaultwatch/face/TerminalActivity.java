@@ -335,14 +335,14 @@ public class TerminalActivity extends Activity {
         }
 
         private void drawFrame(Canvas canvas) {
-            canvas.drawColor(Color.rgb(2, 6, 3));
+            canvas.drawColor(themedColor(255, 2, 6, 3));
             paint.setShader(null);
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(5, 16, 8));
+            paint.setColor(themedColor(255, 5, 16, 8));
             canvas.drawCircle(225, 225, 222, paint);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(2f);
-            paint.setColor(Color.argb(90, 119, 255, 114));
+            paint.setColor(themedColor(90, 119, 255, 114));
             rect.set(18, 18, 432, 432);
             canvas.drawArc(rect, 207, 126, false, paint);
         }
@@ -382,7 +382,7 @@ public class TerminalActivity extends Activity {
         private void drawStatSubTabs(Canvas canvas) {
             for (int i = 0; i < STAT_TABS.length; i++) {
                 float x = 92 + i * 89f;
-                text(canvas, STAT_TABS[i], x, 188, 18, i == statPage ? text : Color.argb(92, 119, 255, 114), Paint.Align.CENTER);
+                text(canvas, STAT_TABS[i], x, 188, 18, i == statPage ? text : themedColor(92, 119, 255, 114), Paint.Align.CENTER);
             }
         }
 
@@ -468,12 +468,12 @@ public class TerminalActivity extends Activity {
                 paint.setFilterBitmap(true);
                 paint.setDither(true);
                 paint.setAlpha(255);
-                paint.setColorFilter(null);
+                paint.setColorFilter(themeTintFilter());
                 canvas.drawBitmap(pipMap, mapSrc, rect, paint);
                 paint.setAlpha(255);
                 paint.setColorFilter(null);
                 paint.setStyle(Paint.Style.FILL);
-                paint.setColor(Color.argb(28, 0, 20, 5));
+                paint.setColor(themedColor(34, 0, 20, 5));
                 canvas.drawRect(rect, paint);
             } else {
                 paint.setStyle(Paint.Style.STROKE);
@@ -859,14 +859,14 @@ public class TerminalActivity extends Activity {
             canvas.scale(width / vaultBoyGif.width(), height / vaultBoyGif.height());
             paint.setAlpha(245);
             paint.setFilterBitmap(true);
-            paint.setColorFilter(themeGifFilter());
+            paint.setColorFilter(themeTintFilter());
             vaultBoyGif.draw(canvas, 0, 0, paint);
             paint.setAlpha(255);
             paint.setColorFilter(null);
             canvas.restoreToCount(save);
         }
 
-        private ColorMatrixColorFilter themeGifFilter() {
+        private ColorMatrixColorFilter themeTintFilter() {
             float red = Color.red(text) / 255f;
             float green = Color.green(text) / 255f;
             float blue = Color.blue(text) / 255f;
@@ -877,6 +877,16 @@ public class TerminalActivity extends Activity {
                     0f, 0f, 0f, 1f, 0f
             });
             return new ColorMatrixColorFilter(matrix);
+        }
+
+        private int themedColor(int alpha, int greenRed, int greenGreen, int greenBlue) {
+            float luminance = (0.2126f * greenRed + 0.7152f * greenGreen + 0.0722f * greenBlue) / 255f;
+            return Color.argb(
+                    alpha,
+                    Math.min(255, Math.round(Color.red(text) * luminance)),
+                    Math.min(255, Math.round(Color.green(text) * luminance)),
+                    Math.min(255, Math.round(Color.blue(text) * luminance))
+            );
         }
 
         private void drawScanlines(Canvas canvas) {
