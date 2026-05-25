@@ -10,7 +10,7 @@ android {
         applicationId = "com.megazegan.vaultwatch.face"
         minSdk = 33
         targetSdk = 36
-        versionCode = 18
-        versionName = "2.7"
+        versionCode = 20
+        versionName = "2.9"
     }
 }

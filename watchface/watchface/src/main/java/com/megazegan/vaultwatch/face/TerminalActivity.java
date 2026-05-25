@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Color;
+import android.graphics.Movie;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -154,6 +157,7 @@ public class TerminalActivity extends Activity {
         private final SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.US);
         private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MM/dd", Locale.US);
         private final Bitmap vaultBoy;
+        private final Movie vaultBoyGif;
         private final Bitmap helmet;
         private final Bitmap bolt;
         private final Bitmap rad;
@@ -208,6 +212,7 @@ public class TerminalActivity extends Activity {
         private String scannerSignal = "UNKNOWN SIGNAL";
         private String weatherStatus = "CLEAR";
         private String securityToken = "VX-111-TEC";
+        private long gifStartTime;
         private int text = Color.rgb(119, 255, 114);
         private int dim = Color.argb(150, 119, 255, 114);
         private int faint = Color.argb(42, 119, 255, 114);
@@ -222,13 +227,14 @@ public class TerminalActivity extends Activity {
                 font = Typeface.MONOSPACE;
             }
             vaultBoy = loadBitmap(context, "img/imported-pipboy/VaultBoy.png");
+            vaultBoyGif = loadMovie(context, "img/imported-pipboy/ezgif-4f3eb3aa896b3f93.gif");
             helmet = loadBitmap(context, "img/ico/helmet.png");
             bolt = loadBitmap(context, "img/ico/bolt.png");
             rad = loadBitmap(context, "img/ico/radioactive.png");
             gun = loadBitmap(context, "img/ico/gun.png");
             pipMap = loadBitmap(context, "img/map.webp");
             randomizeSession();
-            postInvalidateDelayed(1000);
+            postInvalidateDelayed(125);
         }
 
         void setSection(int next) {
@@ -273,7 +279,7 @@ public class TerminalActivity extends Activity {
             drawFooter(canvas);
             drawScanlines(canvas);
             canvas.restoreToCount(save);
-            postInvalidateDelayed(1000);
+            postInvalidateDelayed(section == 0 && statPage == 0 ? 125 : 1000);
         }
 
         @Override
@@ -381,18 +387,16 @@ public class TerminalActivity extends Activity {
         }
 
         private void drawStatus(Canvas canvas) {
-            rect.set(160, 198, 290, 307);
-            box(canvas, rect, false);
             long phase = System.currentTimeMillis() % 1400L;
             float wave = (float) Math.sin((phase / 1400f) * Math.PI * 2f);
             float bob = wave * 3f;
             float pulse = 1f + wave * 0.035f;
-            drawBitmap(canvas, vaultBoy, 189 - (72 * (pulse - 1f) / 2f), 208 + bob, 72 * pulse, 86 * pulse, text);
-            text(canvas, activeEffect, 225, 322, 15, dim, Paint.Align.CENTER);
-            compactMeter(canvas, "HP", 70, 346, hp, text);
-            compactMeter(canvas, "AP", 246, 346, ap, text);
-            compactMeter(canvas, "RAD", 70, 370, radiation, Color.rgb(255, 107, 74));
-            text(canvas, "LEVEL 01", 246, 374, 14, dim, Paint.Align.LEFT);
+            drawVaultBoy(canvas, 175 - (100 * (pulse - 1f) / 2f), 197 + bob, 100 * pulse, 139 * pulse);
+            text(canvas, activeEffect, 225, 348, 15, dim, Paint.Align.CENTER);
+            compactMeter(canvas, "HP", 70, 363, hp, text);
+            compactMeter(canvas, "AP", 222, 363, ap, text);
+            compactMeter(canvas, "RAD", 70, 379, radiation, Color.rgb(255, 107, 74));
+            text(canvas, "LEVEL 01", 222, 380, 14, dim, Paint.Align.LEFT);
         }
 
         private void drawSpecial(Canvas canvas) {
@@ -758,16 +762,17 @@ public class TerminalActivity extends Activity {
         }
 
         private void compactMeter(Canvas canvas, String label, float x, float y, int value, int color) {
+            float barWidth = 82f;
             text(canvas, label, x, y, 14, color, Paint.Align.LEFT);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(1.5f);
             paint.setColor(color);
-            rect.set(x + 42, y - 11, x + 142, y);
+            rect.set(x + 42, y - 11, x + 42 + barWidth, y);
             canvas.drawRect(rect, paint);
             paint.setStyle(Paint.Style.FILL);
-            rect.set(x + 42, y - 11, x + 42 + value, y);
+            rect.set(x + 42, y - 11, x + 42 + barWidth * value / 100f, y);
             canvas.drawRect(rect, paint);
-            text(canvas, String.format(Locale.US, "%02d", value), x + 151, y + 1, 13, color, Paint.Align.LEFT);
+            text(canvas, String.format(Locale.US, "%02d", value), x + 130, y + 1, 13, color, Paint.Align.LEFT);
         }
 
         private void compactValueBar(Canvas canvas, float x, float y, int value, int max) {
@@ -835,6 +840,45 @@ public class TerminalActivity extends Activity {
             paint.setColorFilter(null);
         }
 
+        private void drawVaultBoy(Canvas canvas, float x, float y, float width, float height) {
+            if (vaultBoyGif == null || vaultBoyGif.width() <= 0 || vaultBoyGif.height() <= 0) {
+                drawBitmap(canvas, vaultBoy, x, y, width, height, text);
+                return;
+            }
+            long now = System.currentTimeMillis();
+            if (gifStartTime == 0L) {
+                gifStartTime = now;
+            }
+            int duration = vaultBoyGif.duration();
+            if (duration <= 0) {
+                duration = 1200;
+            }
+            vaultBoyGif.setTime((int) ((now - gifStartTime) % duration));
+            int save = canvas.save();
+            canvas.translate(x, y);
+            canvas.scale(width / vaultBoyGif.width(), height / vaultBoyGif.height());
+            paint.setAlpha(245);
+            paint.setFilterBitmap(true);
+            paint.setColorFilter(themeGifFilter());
+            vaultBoyGif.draw(canvas, 0, 0, paint);
+            paint.setAlpha(255);
+            paint.setColorFilter(null);
+            canvas.restoreToCount(save);
+        }
+
+        private ColorMatrixColorFilter themeGifFilter() {
+            float red = Color.red(text) / 255f;
+            float green = Color.green(text) / 255f;
+            float blue = Color.blue(text) / 255f;
+            ColorMatrix matrix = new ColorMatrix(new float[]{
+                    0f, red, 0f, 0f, 0f,
+                    0f, green, 0f, 0f, 0f,
+                    0f, blue, 0f, 0f, 0f,
+                    0f, 0f, 0f, 1f, 0f
+            });
+            return new ColorMatrixColorFilter(matrix);
+        }
+
         private void drawScanlines(Canvas canvas) {
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(1f);
@@ -865,6 +909,14 @@ public class TerminalActivity extends Activity {
         private static Bitmap loadBitmap(Context context, String path) {
             try (InputStream stream = context.getAssets().open(path)) {
                 return BitmapFactory.decodeStream(stream);
+            } catch (IOException ignored) {
+                return null;
+            }
+        }
+
+        private static Movie loadMovie(Context context, String path) {
+            try (InputStream stream = context.getAssets().open(path)) {
+                return Movie.decodeStream(stream);
             } catch (IOException ignored) {
                 return null;
             }
