@@ -102,15 +102,34 @@ public class TerminalActivity extends Activity {
         private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD"};
         private static final String[] STAT_TABS = {"STATUS", "SPECIAL", "PERKS"};
         private static final String[] THEMES = {"GREEN", "AMBER", "BLUE"};
-        private static final String[] ITEM_NAMES = {
-                "SPOTIFY RELAY", "TIMER FUSE", "ALARM BEACON", "FLASH MODULE",
-                "CALC HOLOTAPE", "BT TRANSCEIVER", "WIFI KEY", "STIM KIT",
-                "RADAWAY", "VAULT 111 SUIT", "NUKA GRENADE", "LASER MUSKET",
-                "ROAD LEATHERS", "PIPE REVOLVER", "BOTTLECAP MINE", "JET INHALER",
-                "COMBAT ARMOR", "PLASMA CELL", "SUGAR BOMBS", "DOGMEAT BANDANA",
-                "FUSION CORE", "MENTATS", "GROGNAK AXE", "NOTE TAPE"
+        private static final String[] INV_TABS = {"WEAPONS", "APPAREL", "AID", "MISC", "JUNK"};
+        private static final String[][] ITEM_POOLS = {
+                {
+                        "10MM SIDEARM", "LASER MUSKET", "PIPE REVOLVER", "PLASMA PISTOL",
+                        "BOTTLECAP MINE", "NUKA GRENADE", "GROGNAK AXE", "COMBAT KNIFE",
+                        "RAILWAY SPIKE", "SECURITY BATON", "FAT MAN TOY", "FLARE GUN"
+                },
+                {
+                        "VAULT 111 SUIT", "ROAD LEATHERS", "COMBAT ARMOR", "DOGMEAT BANDANA",
+                        "MINUTEMAN HAT", "FIELD ARMOR", "RAD FILTER", "LEATHER CHEST",
+                        "TRAVEL COAT", "SYNTH HELMET", "WELDING GOGGLES", "POWER FRAME"
+                },
+                {
+                        "STIM KIT", "RADAWAY", "RAD-X", "JET INHALER",
+                        "MENTATS", "SUGAR BOMBS", "NUKA-COLA", "PURIFIED WATER",
+                        "MED-X", "BUFFOUT", "MUTFRUIT", "INSTAMASH"
+                },
+                {
+                        "SPOTIFY RELAY", "TIMER FUSE", "ALARM BEACON", "FLASH MODULE",
+                        "CALC HOLOTAPE", "BT TRANSCEIVER", "WIFI KEY", "NOTE TAPE",
+                        "VAULT ID", "MAP PIN", "SIGNAL TAG", "DATA TAPE"
+                },
+                {
+                        "TIN CAN", "DUCT TAPE", "DESK FAN", "TOY CAR",
+                        "FUSE BOX", "SENSOR MODULE", "GEAR STACK", "SCRAP METAL",
+                        "COFFEE MUG", "CLIPBOARD", "BURNT BOOK", "OLD CIRCUIT"
+                }
         };
-        private static final String[] ITEM_TYPES = {"WEAPON", "AID", "TOOL", "TECH", "JUNK"};
         private static final String[] QUEST_NAMES = {
                 "OPEN SIGNAL", "SUPPLY RUN", "VAULT CACHE", "RELAY ECHO",
                 "OLD WORLD BLUES", "WATER CHIP TRACE", "NICK'S LEAD",
@@ -166,6 +185,7 @@ public class TerminalActivity extends Activity {
         private Typeface font = Typeface.MONOSPACE;
         private int section;
         private int statPage;
+        private int inventoryPage;
         private int selectedInventory;
         private int selectedData;
         private int selectedStation;
@@ -305,8 +325,17 @@ public class TerminalActivity extends Activity {
                 invalidate();
                 return true;
             }
-            if (section == 1 && x >= 68 && x <= 228 && y >= 175 && y <= 343) {
-                selectedInventory = Math.max(0, Math.min(3, (int) ((y - 175) / 42f)));
+            if (section == 1 && y >= 168 && y <= 198) {
+                int nextPage = Math.max(0, Math.min(INV_TABS.length - 1, (int) ((x - 42) / 82f)));
+                if (nextPage != inventoryPage) {
+                    inventoryPage = nextPage;
+                }
+                randomizeInventoryCategory();
+                invalidate();
+                return true;
+            }
+            if (section == 1 && x >= 68 && x <= 228 && y >= 205 && y <= 349) {
+                selectedInventory = Math.max(0, Math.min(3, (int) ((y - 205) / 36f)));
                 invalidate();
                 return true;
             }
@@ -430,21 +459,29 @@ public class TerminalActivity extends Activity {
         }
 
         private void drawInventory(Canvas canvas) {
+            drawInventorySubTabs(canvas);
             for (int i = 0; i < inventoryItems.length; i++) {
-                rect.set(68, 175 + i * 42, 228, 209 + i * 42);
+                rect.set(68, 205 + i * 36, 228, 235 + i * 36);
                 boolean active = i == selectedInventory;
                 box(canvas, rect, active);
-                drawBitmap(canvas, inventoryIcons[i], 76, 180 + i * 42, 22, 22, text);
-                text(canvas, inventoryItems[i], 105, 198 + i * 42, 14, active ? text : dim, Paint.Align.LEFT);
+                drawBitmap(canvas, inventoryIcons[i], 76, 210 + i * 36, 20, 20, text);
+                text(canvas, inventoryItems[i], 103, 225 + i * 36, 13, active ? text : dim, Paint.Align.LEFT);
             }
-            rect.set(244, 175, 382, 342);
+            rect.set(244, 205, 382, 344);
             box(canvas, rect, false);
-            drawBitmap(canvas, inventoryIcons[selectedInventory], 290, 189, 48, 48, text);
-            text(canvas, inventoryItems[selectedInventory], 313, 258, 17, text, Paint.Align.CENTER);
-            text(canvas, inventoryTypes[selectedInventory], 313, 276, 14, dim, Paint.Align.CENTER);
-            text(canvas, "DMG " + String.format(Locale.US, "%03d", inventoryDamage[selectedInventory]), 268, 298, 15, dim, Paint.Align.LEFT);
-            text(canvas, "WT " + inventoryWeight[selectedInventory] + "  VAL " + String.format(Locale.US, "%03d", inventoryValue[selectedInventory]), 268, 322, 15, dim, Paint.Align.LEFT);
-            text(canvas, "LOAD " + carryWeight + "/220", 313, 358, 14, carryWeight > 180 ? Color.rgb(255, 107, 74) : dim, Paint.Align.CENTER);
+            drawBitmap(canvas, inventoryIcons[selectedInventory], 291, 217, 46, 46, text);
+            text(canvas, inventoryItems[selectedInventory], 313, 282, 16, text, Paint.Align.CENTER);
+            text(canvas, inventoryTypes[selectedInventory], 313, 300, 14, dim, Paint.Align.CENTER);
+            text(canvas, "DMG " + String.format(Locale.US, "%03d", inventoryDamage[selectedInventory]), 268, 322, 14, dim, Paint.Align.LEFT);
+            text(canvas, "WT " + inventoryWeight[selectedInventory] + "  VAL " + String.format(Locale.US, "%03d", inventoryValue[selectedInventory]), 268, 340, 14, dim, Paint.Align.LEFT);
+            text(canvas, "LOAD " + carryWeight + "/220", 225, 370, 14, carryWeight > 180 ? Color.rgb(255, 107, 74) : dim, Paint.Align.CENTER);
+        }
+
+        private void drawInventorySubTabs(Canvas canvas) {
+            for (int i = 0; i < INV_TABS.length; i++) {
+                float x = 44 + i * 83f;
+                text(canvas, INV_TABS[i], x, 188, 13, i == inventoryPage ? text : themedColor(92, 119, 255, 114), Paint.Align.CENTER);
+            }
         }
 
         private void drawData(Canvas canvas) {
@@ -652,27 +689,11 @@ public class TerminalActivity extends Activity {
                 special[i] = 3 + random.nextInt(8);
             }
             selectedInventory = 0;
+            inventoryPage = 0;
             selectedData = 0;
             selectedStation = 0;
             selectedAux = 0;
-            carryWeight = 0;
-            Bitmap[] icons = {gun, bolt, helmet, rad};
-            boolean[] usedItems = new boolean[ITEM_NAMES.length];
-            for (int i = 0; i < inventoryItems.length; i++) {
-                int index;
-                do {
-                    index = random.nextInt(ITEM_NAMES.length);
-                } while (usedItems[index]);
-                usedItems[index] = true;
-                inventoryItems[i] = ITEM_NAMES[index];
-                inventoryTypes[i] = ITEM_TYPES[random.nextInt(ITEM_TYPES.length)];
-                inventoryIcons[i] = icons[random.nextInt(icons.length)];
-                inventoryDamage[i] = random.nextBoolean() ? random.nextInt(46) : 0;
-                inventoryCount[i] = 1 + random.nextInt(99);
-                inventoryValue[i] = 12 + random.nextInt(220);
-                inventoryWeight[i] = 3 + random.nextInt(58);
-                carryWeight += inventoryWeight[i];
-            }
+            randomizeInventoryCategory();
             if (carryWeight > 180) {
                 activeEffect = "OVER-ENCUMBERED";
             } else if (hydration < 45) {
@@ -689,6 +710,36 @@ public class TerminalActivity extends Activity {
                 dataValues[i] = QUEST_STATUS[random.nextInt(QUEST_STATUS.length)];
                 dataNotes[i] = QUEST_NOTES[random.nextInt(QUEST_NOTES.length)];
             }
+        }
+
+        private void randomizeInventoryCategory() {
+            selectedInventory = 0;
+            carryWeight = 0;
+            String[] pool = ITEM_POOLS[inventoryPage];
+            boolean[] usedItems = new boolean[pool.length];
+            for (int i = 0; i < inventoryItems.length; i++) {
+                int index;
+                do {
+                    index = random.nextInt(pool.length);
+                } while (usedItems[index]);
+                usedItems[index] = true;
+                inventoryItems[i] = pool[index];
+                inventoryTypes[i] = INV_TABS[inventoryPage];
+                inventoryIcons[i] = iconForInventoryCategory();
+                inventoryDamage[i] = inventoryPage == 0 ? 8 + random.nextInt(56) : random.nextInt(inventoryPage == 4 ? 6 : 18);
+                inventoryCount[i] = 1 + random.nextInt(inventoryPage == 2 || inventoryPage == 4 ? 12 : 3);
+                inventoryValue[i] = 8 + random.nextInt(inventoryPage == 4 ? 60 : 240);
+                inventoryWeight[i] = 1 + random.nextInt(inventoryPage == 2 ? 8 : inventoryPage == 4 ? 35 : 58);
+                carryWeight += inventoryWeight[i];
+            }
+        }
+
+        private Bitmap iconForInventoryCategory() {
+            if (inventoryPage == 0) return gun;
+            if (inventoryPage == 1) return helmet;
+            if (inventoryPage == 2) return bolt;
+            if (inventoryPage == 3) return rad;
+            return helmet;
         }
 
         private void updateStats() {

@@ -28,7 +28,7 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 - STATUS page keeps the hero Vault Boy layout with HP/AP/RAD and only the most important readouts.
 - SPECIAL page carries the deeper health/survival numbers and SPECIAL bars.
 - PERKS page carries status effects, lifestyle readouts, and system/weather flavor.
-- INV page with randomized Fallout-style utility items, categories, values, and cosmetic carry weight.
+- INV uses Pip-Boy style sub-pages: `WEAPONS`, `APPAREL`, `AID`, `MISC`, and `JUNK`, with freshly randomized items whenever a category is tapped.
 - DATA page with randomized quest names, statuses, and notes.
 - MAP page with an in-app Pip-Boy map, GPS-style readout, speed/altitude simulation, then a button to launch Google Maps.
 - RAD page with in-app radio stations, signal scanner, radio noise flavor, then station taps can launch Spotify.
