@@ -96,20 +96,23 @@ public class TerminalActivity extends Activity {
     }
 
     private static final class PipBoyTerminalView extends View {
-        private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD"};
+        private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD", "COM", "SYS", "SEC", "SURV", "WX"};
         private static final String[] THEMES = {"GREEN", "AMBER", "BLUE"};
         private static final String[] ITEM_NAMES = {
-                "10MM SIDEARM", "STIM KIT", "FIELD ARMOR", "RAD FILTER",
-                "VAULT 111 SUIT", "NUKA GRENADE", "LASER MUSKET", "RADAWAY",
+                "SPOTIFY RELAY", "TIMER FUSE", "ALARM BEACON", "FLASH MODULE",
+                "CALC HOLOTAPE", "BT TRANSCEIVER", "WIFI KEY", "STIM KIT",
+                "RADAWAY", "VAULT 111 SUIT", "NUKA GRENADE", "LASER MUSKET",
                 "ROAD LEATHERS", "PIPE REVOLVER", "BOTTLECAP MINE", "JET INHALER",
                 "COMBAT ARMOR", "PLASMA CELL", "SUGAR BOMBS", "DOGMEAT BANDANA",
-                "MINUTEMAN HAT", "FUSION CORE", "MENTATS", "GROGNAK AXE"
+                "FUSION CORE", "MENTATS", "GROGNAK AXE", "NOTE TAPE"
         };
+        private static final String[] ITEM_TYPES = {"WEAPON", "AID", "TOOL", "TECH", "JUNK"};
         private static final String[] QUEST_NAMES = {
                 "OPEN SIGNAL", "SUPPLY RUN", "VAULT CACHE", "RELAY ECHO",
                 "OLD WORLD BLUES", "WATER CHIP TRACE", "NICK'S LEAD",
                 "ATOM'S GLOW", "CARAVAN CALL", "RED ROCKET CACHE",
-                "SILVER SHROUD", "LOST PATROL", "GNN DISTRESS"
+                "SILVER SHROUD", "LOST PATROL", "GNN DISTRESS", "WALK 4K STEPS",
+                "DRINK WATER", "CHECK NOTES", "SECURITY SWEEP", "GYM ROUTE"
         };
         private static final String[] QUEST_NOTES = {
                 "FOLLOW CARRIER TONE NORTH-EAST",
@@ -121,7 +124,26 @@ public class TerminalActivity extends Activity {
                 "RETURN BEFORE RAD STORM ARRIVAL",
                 "SETTLEMENT REQUEST FLAGGED URGENT"
         };
-        private static final String[] QUEST_STATUS = {"ACTIVE", "47%", "NEW", "HOLD", "TRACE", "SYNC"};
+        private static final String[] QUEST_STATUS = {"ACTIVE", "47%", "NEW", "HOLD", "TRACE", "SYNC", "DONE"};
+        private static final String[] EFFECTS = {
+                "WELL RESTED", "FOCUSED", "CAFFEINATED", "ENERGIZED",
+                "OVER-ENCUMBERED", "LOW POWER MODE", "DEHYDRATED", "SLEEP DEPRIVED"
+        };
+        private static final String[] COMMS = {
+                "SMS PREVIEW", "MISSED CALL", "DISCORD ALERT", "VAULT MAIL"
+        };
+        private static final String[] SYSTEM_ROWS = {
+                "BATTERY", "RAM USAGE", "CORE TEMP", "STORAGE"
+        };
+        private static final String[] SECURITY_ROWS = {
+                "PASS GEN", "QR SCAN", "NFC READER", "PING TEST"
+        };
+        private static final String[] SURVIVAL_ROWS = {
+                "WATER", "MEDS", "STEP GOAL", "WORKOUT"
+        };
+        private static final String[] WEATHER_ROWS = {
+                "TEMP", "RAIN", "UV INDEX", "WIND"
+        };
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Rect mapSrc = new Rect();
@@ -141,6 +163,7 @@ public class TerminalActivity extends Activity {
         private int selectedInventory;
         private int selectedData;
         private int selectedStation;
+        private int selectedAux;
         private int theme;
         private int hp;
         private int ap;
@@ -149,15 +172,40 @@ public class TerminalActivity extends Activity {
         private int arm;
         private int leg;
         private int core;
+        private int heartRate;
+        private int stress;
+        private int hydration;
+        private int sleepScore;
+        private int steps;
+        private int oxygen;
+        private int tempSim;
+        private int carryWeight;
+        private int radioSignal;
+        private int speed;
+        private int altitude;
+        private int ramUse;
+        private int cpuTemp;
+        private int storageUse;
+        private int rainChance;
+        private int windSpeed;
+        private int uvIndex;
+        private int nextWater;
         private long lastStatTick;
         private String[] inventoryItems = new String[4];
+        private String[] inventoryTypes = new String[4];
         private Bitmap[] inventoryIcons = new Bitmap[4];
         private int[] inventoryDamage = new int[4];
         private int[] inventoryCount = new int[4];
         private int[] inventoryValue = new int[4];
+        private int[] inventoryWeight = new int[4];
         private String[] dataLabels = new String[3];
         private String[] dataValues = new String[3];
         private String[] dataNotes = new String[3];
+        private int[] special = new int[7];
+        private String activeEffect = "WELL RESTED";
+        private String scannerSignal = "UNKNOWN SIGNAL";
+        private String weatherStatus = "CLEAR";
+        private String securityToken = "VX-111-TEC";
         private int text = Color.rgb(119, 255, 114);
         private int dim = Color.argb(150, 119, 255, 114);
         private int faint = Color.argb(42, 119, 255, 114);
@@ -182,7 +230,8 @@ public class TerminalActivity extends Activity {
         }
 
         void setSection(int next) {
-            section = Math.max(0, Math.min(4, next));
+            section = Math.max(0, Math.min(TABS.length - 1, next));
+            selectedAux = 0;
             invalidate();
         }
 
@@ -215,6 +264,21 @@ public class TerminalActivity extends Activity {
                 case 4:
                     drawRadio(canvas);
                     break;
+                case 5:
+                    drawComms(canvas);
+                    break;
+                case 6:
+                    drawSystem(canvas);
+                    break;
+                case 7:
+                    drawSecurity(canvas);
+                    break;
+                case 8:
+                    drawSurvival(canvas);
+                    break;
+                case 9:
+                    drawWeather(canvas);
+                    break;
                 default:
                     drawStatus(canvas);
                     break;
@@ -234,7 +298,9 @@ public class TerminalActivity extends Activity {
             float x = (event.getX() - (getWidth() - size) / 2f) * 450f / size;
             float y = (event.getY() - (getHeight() - size) / 2f) * 450f / size;
             if (y >= 128 && y <= 166) {
-                int next = Math.max(0, Math.min(4, (int) ((x - 58) / 74f)));
+                int visibleStart = visibleTabStart();
+                int next = visibleStart + Math.max(0, Math.min(4, (int) ((x - 58) / 74f)));
+                next = Math.max(0, Math.min(TABS.length - 1, next));
                 goToSection(next);
                 return true;
             }
@@ -256,6 +322,12 @@ public class TerminalActivity extends Activity {
                 selectedStation = Math.max(0, Math.min(2, (int) ((y - 262) / 40f)));
                 invalidate();
                 launchPackage("com.spotify.music");
+                return true;
+            }
+            if (section >= 5 && x >= 72 && x <= 378 && y >= 176 && y <= 340) {
+                selectedAux = Math.max(0, Math.min(3, (int) ((y - 176) / 40f)));
+                randomizeAuxiliarySignal();
+                invalidate();
                 return true;
             }
             if (y >= 374 && y <= 425) {
@@ -288,17 +360,25 @@ public class TerminalActivity extends Activity {
 
         private void drawTabs(Canvas canvas) {
             paint.setStrokeWidth(1.5f);
-            for (int i = 0; i < TABS.length; i++) {
+            int visibleStart = visibleTabStart();
+            for (int i = 0; i < 5; i++) {
+                int tabIndex = visibleStart + i;
                 float left = 58 + i * 74f;
                 rect.set(left, 129, left + 70, 163);
                 paint.setStyle(Paint.Style.FILL);
-                paint.setColor(i == section ? faint : Color.TRANSPARENT);
+                paint.setColor(tabIndex == section ? faint : Color.TRANSPARENT);
                 canvas.drawRect(rect, paint);
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setColor(i == section ? text : dim);
+                paint.setColor(tabIndex == section ? text : dim);
                 canvas.drawRect(rect, paint);
-                text(canvas, TABS[i], left + 35, 152, 16, i == section ? text : dim, Paint.Align.CENTER);
+                text(canvas, TABS[tabIndex], left + 35, 152, 16, tabIndex == section ? text : dim, Paint.Align.CENTER);
             }
+            if (visibleStart > 0) text(canvas, "<", 42, 152, 18, dim, Paint.Align.CENTER);
+            if (visibleStart + 5 < TABS.length) text(canvas, ">", 408, 152, 18, dim, Paint.Align.CENTER);
+        }
+
+        private int visibleTabStart() {
+            return Math.min(Math.max(0, section - 2), TABS.length - 5);
         }
 
         private void drawStatus(Canvas canvas) {
@@ -309,14 +389,16 @@ public class TerminalActivity extends Activity {
             float bob = wave * 3f;
             float pulse = 1f + wave * 0.035f;
             drawBitmap(canvas, vaultBoy, 91 - (76 * (pulse - 1f) / 2f), 186 + bob, 76 * pulse, 92 * pulse, text);
-            text(canvas, "STATUS OK", 129, 300, 14, dim, Paint.Align.CENTER);
+            text(canvas, activeEffect, 129, 300, 12, dim, Paint.Align.CENTER);
             meter(canvas, helmet, "HP", 205, 188, hp, text);
             meter(canvas, bolt, "AP", 205, 239, ap, text);
             meter(canvas, rad, "RAD", 205, 290, radiation, Color.rgb(255, 107, 74));
-            statBox(canvas, "HEAD " + head, 68, 318, 170);
-            statBox(canvas, "ARM " + arm, 242, 318, 140);
-            statBox(canvas, "LEG " + leg, 68, 350, 170);
-            statBox(canvas, "CORE " + core, 242, 350, 140);
+            statBox(canvas, "HR " + heartRate, 68, 318, 74);
+            statBox(canvas, "O2 " + oxygen, 146, 318, 74);
+            statBox(canvas, "H2O " + hydration, 224, 318, 74);
+            statBox(canvas, "SLP " + sleepScore, 302, 318, 80);
+            text(canvas, "S " + special[0] + "  P " + special[1] + "  E " + special[2] + "  C " + special[3], 225, 363, 14, dim, Paint.Align.CENTER);
+            text(canvas, "I " + special[4] + "  A " + special[5] + "  L " + special[6] + "  FAT " + (100 - ap), 225, 379, 14, dim, Paint.Align.CENTER);
         }
 
         private void drawInventory(Canvas canvas) {
@@ -331,9 +413,10 @@ public class TerminalActivity extends Activity {
             box(canvas, rect, false);
             drawBitmap(canvas, inventoryIcons[selectedInventory], 290, 189, 48, 48, text);
             text(canvas, inventoryItems[selectedInventory], 313, 258, 17, text, Paint.Align.CENTER);
-            text(canvas, "DMG " + String.format(Locale.US, "%03d", inventoryDamage[selectedInventory]), 268, 286, 15, dim, Paint.Align.LEFT);
-            text(canvas, "COUNT " + String.format(Locale.US, "%03d", inventoryCount[selectedInventory]), 268, 310, 15, dim, Paint.Align.LEFT);
-            text(canvas, "VAL " + String.format(Locale.US, "%03d", inventoryValue[selectedInventory]), 268, 334, 15, dim, Paint.Align.LEFT);
+            text(canvas, inventoryTypes[selectedInventory], 313, 276, 14, dim, Paint.Align.CENTER);
+            text(canvas, "DMG " + String.format(Locale.US, "%03d", inventoryDamage[selectedInventory]), 268, 298, 15, dim, Paint.Align.LEFT);
+            text(canvas, "WT " + inventoryWeight[selectedInventory] + "  VAL " + String.format(Locale.US, "%03d", inventoryValue[selectedInventory]), 268, 322, 15, dim, Paint.Align.LEFT);
+            text(canvas, "LOAD " + carryWeight + "/220", 313, 358, 14, carryWeight > 180 ? Color.rgb(255, 107, 74) : dim, Paint.Align.CENTER);
         }
 
         private void drawData(Canvas canvas) {
@@ -386,6 +469,8 @@ public class TerminalActivity extends Activity {
             canvas.drawRect(rect, paint);
             pin(canvas, 294, 212, "R34");
             pin(canvas, 154, 282, "TUN");
+            text(canvas, "GPS 41.008N 28.978E", 225, 316, 12, dim, Paint.Align.CENTER);
+            text(canvas, "SPD " + speed + "KMH  ALT " + altitude + "M", 225, 331, 12, dim, Paint.Align.CENTER);
             rect.set(88, 342, 362, 372);
             box(canvas, rect, true);
             text(canvas, "OPEN GOOGLE MAPS", 225, 363, 15, text, Paint.Align.CENTER);
@@ -395,10 +480,70 @@ public class TerminalActivity extends Activity {
             String[] stations = {"WVR 88.1", "RANGER NET", "CLASSICAL"};
             String[] states = {"PLAY", "SYNC", "OPEN"};
             drawBitmap(canvas, rad, 186, 176, 78, 78, text);
+            meterBar(canvas, "SIGNAL", 88, 252, radioSignal, text);
             for (int i = 0; i < stations.length; i++) {
-                row(canvas, 88, 262 + i * 40, stations[i], states[i], i == selectedStation);
+                row(canvas, 88, 276 + i * 34, stations[i], states[i], i == selectedStation);
             }
-            text(canvas, "TAP STATION FOR SPOTIFY", 225, 374, 13, dim, Paint.Align.CENTER);
+            text(canvas, scannerSignal, 225, 374, 13, dim, Paint.Align.CENTER);
+        }
+
+        private void drawComms(Canvas canvas) {
+            String[] values = {"1 NEW", "NONE", "SYNC", "LOCKED"};
+            drawMenuRows(canvas, COMMS, values);
+            detailPanel(canvas, "COMMS RELAY", "NOTIFICATIONS ARE READ-ONLY", "NO BACKGROUND SPAM");
+        }
+
+        private void drawSystem(Canvas canvas) {
+            String[] values = {
+                    "83%",
+                    ramUse + "%",
+                    cpuTemp + "C",
+                    storageUse + "%"
+            };
+            drawMenuRows(canvas, SYSTEM_ROWS, values);
+            detailPanel(canvas, "POWER MODE", "LOW REFRESH / AMOLED SAFE", "APK v2.6");
+        }
+
+        private void drawSecurity(Canvas canvas) {
+            String[] values = {"READY", "IDLE", "WAIT", "12MS"};
+            drawMenuRows(canvas, SECURITY_ROWS, values);
+            detailPanel(canvas, "SECURITY", securityToken, "LOCAL TO WATCH ONLY");
+        }
+
+        private void drawSurvival(Canvas canvas) {
+            String[] values = {
+                    hydration + "%",
+                    "22:00",
+                    steps + "/6K",
+                    ap > 65 ? "READY" : "REST"
+            };
+            drawMenuRows(canvas, SURVIVAL_ROWS, values);
+            detailPanel(canvas, "SURVIVAL", activeEffect, "NEXT WATER IN " + nextWater + "M");
+        }
+
+        private void drawWeather(Canvas canvas) {
+            String[] values = {
+                    tempSim + "C",
+                    rainChance + "%",
+                    String.valueOf(uvIndex),
+                    windSpeed + "KMH"
+            };
+            drawMenuRows(canvas, WEATHER_ROWS, values);
+            detailPanel(canvas, "WEATHER", weatherStatus, "RAD STORM: " + (radiation > 28 ? "WATCH" : "CLEAR"));
+        }
+
+        private void drawMenuRows(Canvas canvas, String[] labels, String[] values) {
+            for (int i = 0; i < labels.length; i++) {
+                row(canvas, 72, 176 + i * 40, labels[i], values[i], i == selectedAux);
+            }
+        }
+
+        private void detailPanel(Canvas canvas, String title, String lineOne, String lineTwo) {
+            rect.set(72, 342, 378, 374);
+            box(canvas, rect, true);
+            text(canvas, title, 88, 363, 14, text, Paint.Align.LEFT);
+            text(canvas, lineOne, 362, 363, 12, text, Paint.Align.RIGHT);
+            text(canvas, lineTwo, 225, 336, 12, dim, Paint.Align.CENTER);
         }
 
         private void drawFooter(Canvas canvas) {
@@ -434,8 +579,12 @@ public class TerminalActivity extends Activity {
             } else if (section == 2) {
                 selectedData = (selectedData + direction + 3) % 3;
                 invalidate();
+            } else if (section >= 5) {
+                selectedAux = (selectedAux + direction + 4) % 4;
+                randomizeAuxiliarySignal();
+                invalidate();
             } else {
-                goToSection(section + direction < 0 ? 4 : (section + direction) % 5);
+                goToSection(section + direction < 0 ? TABS.length - 1 : (section + direction) % TABS.length);
             }
         }
 
@@ -447,9 +596,35 @@ public class TerminalActivity extends Activity {
             arm = 55 + random.nextInt(44);
             leg = 50 + random.nextInt(45);
             core = 60 + random.nextInt(38);
+            heartRate = 64 + random.nextInt(42);
+            stress = 8 + random.nextInt(62);
+            hydration = 45 + random.nextInt(54);
+            sleepScore = 52 + random.nextInt(47);
+            steps = 800 + random.nextInt(5200);
+            oxygen = 94 + random.nextInt(6);
+            tempSim = 12 + random.nextInt(22);
+            ramUse = 28 + random.nextInt(48);
+            cpuTemp = 29 + random.nextInt(16);
+            storageUse = 34 + random.nextInt(46);
+            rainChance = random.nextInt(90);
+            windSpeed = 4 + random.nextInt(28);
+            uvIndex = 1 + random.nextInt(8);
+            nextWater = 20 + random.nextInt(40);
+            speed = random.nextInt(8);
+            altitude = 12 + random.nextInt(180);
+            radioSignal = 35 + random.nextInt(62);
+            activeEffect = EFFECTS[random.nextInt(EFFECTS.length)];
+            scannerSignal = randomSignal();
+            weatherStatus = rainChance > 55 ? "RAIN FRONT" : radiation > 28 ? "RAD HAZE" : "CLEAR SKIES";
+            securityToken = "VX-" + (100 + random.nextInt(899)) + "-TEC";
+            for (int i = 0; i < special.length; i++) {
+                special[i] = 3 + random.nextInt(8);
+            }
             selectedInventory = 0;
             selectedData = 0;
             selectedStation = 0;
+            selectedAux = 0;
+            carryWeight = 0;
             Bitmap[] icons = {gun, bolt, helmet, rad};
             boolean[] usedItems = new boolean[ITEM_NAMES.length];
             for (int i = 0; i < inventoryItems.length; i++) {
@@ -459,10 +634,18 @@ public class TerminalActivity extends Activity {
                 } while (usedItems[index]);
                 usedItems[index] = true;
                 inventoryItems[i] = ITEM_NAMES[index];
+                inventoryTypes[i] = ITEM_TYPES[random.nextInt(ITEM_TYPES.length)];
                 inventoryIcons[i] = icons[random.nextInt(icons.length)];
                 inventoryDamage[i] = random.nextBoolean() ? random.nextInt(46) : 0;
                 inventoryCount[i] = 1 + random.nextInt(99);
                 inventoryValue[i] = 12 + random.nextInt(220);
+                inventoryWeight[i] = 3 + random.nextInt(58);
+                carryWeight += inventoryWeight[i];
+            }
+            if (carryWeight > 180) {
+                activeEffect = "OVER-ENCUMBERED";
+            } else if (hydration < 45) {
+                activeEffect = "DEHYDRATED";
             }
             boolean[] usedQuests = new boolean[QUEST_NAMES.length];
             for (int i = 0; i < dataLabels.length; i++) {
@@ -490,6 +673,12 @@ public class TerminalActivity extends Activity {
             arm = drift(arm, 45, 99, 3);
             leg = drift(leg, 40, 99, 3);
             core = drift(core, 50, 99, 3);
+            heartRate = drift(heartRate, 58, 112, 3);
+            stress = drift(stress, 4, 92, 3);
+            hydration = drift(hydration, 30, 99, 2);
+            oxygen = drift(oxygen, 92, 100, 1);
+            radioSignal = drift(radioSignal, 20, 99, 4);
+            speed = drift(speed, 0, 9, 1);
         }
 
         private int drift(int value, int min, int max, int amount) {
@@ -497,6 +686,21 @@ public class TerminalActivity extends Activity {
             if (next < min) return min;
             if (next > max) return max;
             return next;
+        }
+
+        private void randomizeAuxiliarySignal() {
+            scannerSignal = randomSignal();
+            radioSignal = drift(radioSignal, 20, 99, 12);
+            ramUse = drift(ramUse, 18, 88, 8);
+            cpuTemp = drift(cpuTemp, 26, 49, 3);
+        }
+
+        private String randomSignal() {
+            String[] signals = {
+                    "UNKNOWN SIGNAL", "WEAK TRANSMISSION", "ENCRYPTED DEVICE",
+                    "VAULT PING", "STATIC BURST", "LOCAL BEACON"
+            };
+            return signals[random.nextInt(signals.length)];
         }
 
         private void meter(Canvas canvas, Bitmap icon, String label, float x, float y, int value, int color) {
@@ -511,6 +715,19 @@ public class TerminalActivity extends Activity {
             rect.set(x + 74, y - 8, x + 74 + 131 * value / 100f, y + 4);
             canvas.drawRect(rect, paint);
             text(canvas, String.format(Locale.US, "%03d", value), x + 214, y + 4, 16, color, Paint.Align.LEFT);
+        }
+
+        private void meterBar(Canvas canvas, String label, float x, float y, int value, int color) {
+            text(canvas, label, x, y + 4, 13, color, Paint.Align.LEFT);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.5f);
+            paint.setColor(color);
+            rect.set(x + 72, y - 8, x + 220, y + 4);
+            canvas.drawRect(rect, paint);
+            paint.setStyle(Paint.Style.FILL);
+            rect.set(x + 72, y - 8, x + 72 + 148 * value / 100f, y + 4);
+            canvas.drawRect(rect, paint);
+            text(canvas, String.format(Locale.US, "%03d", value), x + 238, y + 4, 13, color, Paint.Align.LEFT);
         }
 
         private void statBox(Canvas canvas, String label, float x, float y, float width) {

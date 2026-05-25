@@ -19,12 +19,20 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 - Native Wear OS APK built for Galaxy Watch 4 / Wear OS round displays.
 - Pip-Boy styled watch face with live time, date, battery, and weather complication text.
 - Interactive terminal app with large touch targets for the watch screen.
-- STAT page with animated Vault Boy and constantly changing HP/AP/RAD/body values.
-- INV page with randomized Fallout-style item names and selectable equipment rows.
+- STAT page with animated Vault Boy, HP/AP/RAD, heart rate, oxygen, hydration, sleep score, fatigue, status effects, and SPECIAL stats.
+- INV page with randomized Fallout-style utility items, categories, values, and cosmetic carry weight.
 - DATA page with randomized quest names, statuses, and notes.
-- MAP page with an in-app Pip-Boy map first, then a button to launch Google Maps.
-- RAD page with in-app radio stations first, then station taps can launch Spotify.
+- MAP page with an in-app Pip-Boy map, GPS-style readout, speed/altitude simulation, then a button to launch Google Maps.
+- RAD page with in-app radio stations, signal scanner, radio noise flavor, then station taps can launch Spotify.
+- Sliding Pip-OS tab strip with extra COM, SYS, SEC, SURV, and WX utility pages.
+- COM page for notification-style readouts.
+- SYS page for battery/RAM/temperature/storage readouts.
+- SEC page for password generator, QR/NFC/Wi-Fi/ping themed tools.
+- SURV page for water, meds, step goal, and workout reminders.
+- WX page for retro weather terminal information and radiation-style storm warnings.
 - Monofonto terminal typography, scanlines, glow, green/orange radiation accents, and round-screen composition.
+
+The expanded pages are intentionally lightweight. They use simple Canvas drawing, text rows, tiny bitmap icons, low-frequency redraws, and simulated/session data instead of constant GPS, Bluetooth, sensor, or internet polling.
 
 ## Run the Browser Preview
 

@@ -7,6 +7,8 @@ It includes two parts:
 - A Watch Face Format face, shown in the Wear OS face picker as `VaultWatch Face`.
 - A native Android activity, shown as the interactive Pip-Boy terminal app.
 
+The terminal app is designed for Galaxy Watch 4 performance: Canvas/text UI, no WebView runtime, no heavy 3D, no constant GPS scanning, and no background sensor polling. Extra Pip-OS pages include STAT, INV, DATA, MAP, RAD, COM, SYS, SEC, SURV, and WX.
+
 ## Build
 
 Open this `watchface/` folder in Android Studio, let Gradle sync, then build the `watchface` module.
