@@ -96,7 +96,8 @@ public class TerminalActivity extends Activity {
     }
 
     private static final class PipBoyTerminalView extends View {
-        private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD", "COM", "SYS", "SEC", "SURV", "WX"};
+        private static final String[] TABS = {"STAT", "INV", "DATA", "MAP", "RAD"};
+        private static final String[] STAT_TABS = {"STATUS", "SPECIAL", "PERKS"};
         private static final String[] THEMES = {"GREEN", "AMBER", "BLUE"};
         private static final String[] ITEM_NAMES = {
                 "SPOTIFY RELAY", "TIMER FUSE", "ALARM BEACON", "FLASH MODULE",
@@ -160,6 +161,7 @@ public class TerminalActivity extends Activity {
         private final Bitmap pipMap;
         private Typeface font = Typeface.MONOSPACE;
         private int section;
+        private int statPage;
         private int selectedInventory;
         private int selectedData;
         private int selectedStation;
@@ -264,23 +266,8 @@ public class TerminalActivity extends Activity {
                 case 4:
                     drawRadio(canvas);
                     break;
-                case 5:
-                    drawComms(canvas);
-                    break;
-                case 6:
-                    drawSystem(canvas);
-                    break;
-                case 7:
-                    drawSecurity(canvas);
-                    break;
-                case 8:
-                    drawSurvival(canvas);
-                    break;
-                case 9:
-                    drawWeather(canvas);
-                    break;
                 default:
-                    drawStatus(canvas);
+                    drawStat(canvas);
                     break;
             }
             drawFooter(canvas);
@@ -298,10 +285,18 @@ public class TerminalActivity extends Activity {
             float x = (event.getX() - (getWidth() - size) / 2f) * 450f / size;
             float y = (event.getY() - (getHeight() - size) / 2f) * 450f / size;
             if (y >= 128 && y <= 166) {
-                int visibleStart = visibleTabStart();
-                int next = visibleStart + Math.max(0, Math.min(4, (int) ((x - 58) / 74f)));
-                next = Math.max(0, Math.min(TABS.length - 1, next));
+                int next = Math.max(0, Math.min(TABS.length - 1, (int) ((x - 58) / 74f)));
                 goToSection(next);
+                return true;
+            }
+            if (section == 0 && y >= 168 && y <= 198) {
+                statPage = Math.max(0, Math.min(2, (int) ((x - 92) / 89f)));
+                invalidate();
+                return true;
+            }
+            if (section == 0 && statPage > 0 && x >= 72 && x <= 378 && y >= 198 && y <= 378) {
+                selectedAux = Math.max(0, Math.min(statPage == 1 ? 6 : 5, (int) ((y - 198) / (statPage == 1 ? 22f : 27f))));
+                invalidate();
                 return true;
             }
             if (section == 1 && x >= 68 && x <= 228 && y >= 175 && y <= 343) {
@@ -322,12 +317,6 @@ public class TerminalActivity extends Activity {
                 selectedStation = Math.max(0, Math.min(2, (int) ((y - 262) / 40f)));
                 invalidate();
                 launchPackage("com.spotify.music");
-                return true;
-            }
-            if (section >= 5 && x >= 72 && x <= 378 && y >= 176 && y <= 340) {
-                selectedAux = Math.max(0, Math.min(3, (int) ((y - 176) / 40f)));
-                randomizeAuxiliarySignal();
-                invalidate();
                 return true;
             }
             if (y >= 374 && y <= 425) {
@@ -360,45 +349,80 @@ public class TerminalActivity extends Activity {
 
         private void drawTabs(Canvas canvas) {
             paint.setStrokeWidth(1.5f);
-            int visibleStart = visibleTabStart();
-            for (int i = 0; i < 5; i++) {
-                int tabIndex = visibleStart + i;
+            for (int i = 0; i < TABS.length; i++) {
                 float left = 58 + i * 74f;
                 rect.set(left, 129, left + 70, 163);
                 paint.setStyle(Paint.Style.FILL);
-                paint.setColor(tabIndex == section ? faint : Color.TRANSPARENT);
+                paint.setColor(i == section ? faint : Color.TRANSPARENT);
                 canvas.drawRect(rect, paint);
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setColor(tabIndex == section ? text : dim);
+                paint.setColor(i == section ? text : dim);
                 canvas.drawRect(rect, paint);
-                text(canvas, TABS[tabIndex], left + 35, 152, 16, tabIndex == section ? text : dim, Paint.Align.CENTER);
+                text(canvas, TABS[i], left + 35, 152, 16, i == section ? text : dim, Paint.Align.CENTER);
             }
-            if (visibleStart > 0) text(canvas, "<", 42, 152, 18, dim, Paint.Align.CENTER);
-            if (visibleStart + 5 < TABS.length) text(canvas, ">", 408, 152, 18, dim, Paint.Align.CENTER);
         }
 
-        private int visibleTabStart() {
-            return Math.min(Math.max(0, section - 2), TABS.length - 5);
+        private void drawStat(Canvas canvas) {
+            drawStatSubTabs(canvas);
+            if (statPage == 1) {
+                drawSpecial(canvas);
+            } else if (statPage == 2) {
+                drawPerks(canvas);
+            } else {
+                drawStatus(canvas);
+            }
+        }
+
+        private void drawStatSubTabs(Canvas canvas) {
+            for (int i = 0; i < STAT_TABS.length; i++) {
+                float x = 92 + i * 89f;
+                text(canvas, STAT_TABS[i], x, 188, 18, i == statPage ? text : Color.argb(92, 119, 255, 114), Paint.Align.CENTER);
+            }
         }
 
         private void drawStatus(Canvas canvas) {
-            rect.set(68, 171, 190, 310);
+            rect.set(160, 198, 290, 307);
             box(canvas, rect, false);
             long phase = System.currentTimeMillis() % 1400L;
             float wave = (float) Math.sin((phase / 1400f) * Math.PI * 2f);
             float bob = wave * 3f;
             float pulse = 1f + wave * 0.035f;
-            drawBitmap(canvas, vaultBoy, 91 - (76 * (pulse - 1f) / 2f), 186 + bob, 76 * pulse, 92 * pulse, text);
-            text(canvas, activeEffect, 129, 300, 12, dim, Paint.Align.CENTER);
-            meter(canvas, helmet, "HP", 205, 188, hp, text);
-            meter(canvas, bolt, "AP", 205, 239, ap, text);
-            meter(canvas, rad, "RAD", 205, 290, radiation, Color.rgb(255, 107, 74));
-            statBox(canvas, "HR " + heartRate, 68, 318, 74);
-            statBox(canvas, "O2 " + oxygen, 146, 318, 74);
-            statBox(canvas, "H2O " + hydration, 224, 318, 74);
-            statBox(canvas, "SLP " + sleepScore, 302, 318, 80);
-            text(canvas, "S " + special[0] + "  P " + special[1] + "  E " + special[2] + "  C " + special[3], 225, 363, 14, dim, Paint.Align.CENTER);
-            text(canvas, "I " + special[4] + "  A " + special[5] + "  L " + special[6] + "  FAT " + (100 - ap), 225, 379, 14, dim, Paint.Align.CENTER);
+            drawBitmap(canvas, vaultBoy, 189 - (72 * (pulse - 1f) / 2f), 208 + bob, 72 * pulse, 86 * pulse, text);
+            text(canvas, activeEffect, 225, 322, 15, dim, Paint.Align.CENTER);
+            compactMeter(canvas, "HP", 70, 346, hp, text);
+            compactMeter(canvas, "AP", 246, 346, ap, text);
+            compactMeter(canvas, "RAD", 70, 370, radiation, Color.rgb(255, 107, 74));
+            text(canvas, "LEVEL 01", 246, 374, 14, dim, Paint.Align.LEFT);
+        }
+
+        private void drawSpecial(Canvas canvas) {
+            String[] labels = {"STRENGTH", "PERCEPTION", "ENDURANCE", "CHARISMA", "INTELLIGENCE", "AGILITY", "LUCK"};
+            for (int i = 0; i < labels.length; i++) {
+                float y = 205 + i * 22f;
+                text(canvas, labels[i], 72, y, 14, i == selectedAux ? text : dim, Paint.Align.LEFT);
+                compactValueBar(canvas, 198, y - 10, special[i], 10);
+                text(canvas, String.valueOf(special[i]), 350, y, 14, text, Paint.Align.RIGHT);
+            }
+            rect.set(72, 356, 378, 378);
+            box(canvas, rect, true);
+            text(canvas, "HR " + heartRate + "  O2 " + oxygen + "  H2O " + hydration + "  SLP " + sleepScore, 225, 372, 13, text, Paint.Align.CENTER);
+        }
+
+        private void drawPerks(Canvas canvas) {
+            String[] perks = {
+                    activeEffect,
+                    "STEPS " + steps + "/6000",
+                    "STRESS " + stress + "%",
+                    "TEMP " + tempSim + "C",
+                    "RAM " + ramUse + "%  CORE " + cpuTemp + "C",
+                    "WX " + weatherStatus
+            };
+            for (int i = 0; i < perks.length; i++) {
+                rect.set(72, 202 + i * 27, 378, 224 + i * 27);
+                box(canvas, rect, i == selectedAux);
+                text(canvas, perks[i], 88, 218 + i * 27, 13, i == selectedAux ? text : dim, Paint.Align.LEFT);
+            }
+            text(canvas, "PERK CHART", 225, 374, 16, text, Paint.Align.CENTER);
         }
 
         private void drawInventory(Canvas canvas) {
@@ -573,7 +597,10 @@ public class TerminalActivity extends Activity {
         }
 
         private void stepWithinSection(int direction) {
-            if (section == 1) {
+            if (section == 0) {
+                statPage = (statPage + direction + STAT_TABS.length) % STAT_TABS.length;
+                invalidate();
+            } else if (section == 1) {
                 selectedInventory = (selectedInventory + direction + 4) % 4;
                 invalidate();
             } else if (section == 2) {
@@ -728,6 +755,31 @@ public class TerminalActivity extends Activity {
             rect.set(x + 72, y - 8, x + 72 + 148 * value / 100f, y + 4);
             canvas.drawRect(rect, paint);
             text(canvas, String.format(Locale.US, "%03d", value), x + 238, y + 4, 13, color, Paint.Align.LEFT);
+        }
+
+        private void compactMeter(Canvas canvas, String label, float x, float y, int value, int color) {
+            text(canvas, label, x, y, 14, color, Paint.Align.LEFT);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.5f);
+            paint.setColor(color);
+            rect.set(x + 42, y - 11, x + 142, y);
+            canvas.drawRect(rect, paint);
+            paint.setStyle(Paint.Style.FILL);
+            rect.set(x + 42, y - 11, x + 42 + value, y);
+            canvas.drawRect(rect, paint);
+            text(canvas, String.format(Locale.US, "%02d", value), x + 151, y + 1, 13, color, Paint.Align.LEFT);
+        }
+
+        private void compactValueBar(Canvas canvas, float x, float y, int value, int max) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.3f);
+            paint.setColor(dim);
+            rect.set(x, y, x + 125, y + 9);
+            canvas.drawRect(rect, paint);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(text);
+            rect.set(x, y, x + 125 * value / max, y + 9);
+            canvas.drawRect(rect, paint);
         }
 
         private void statBox(Canvas canvas, String label, float x, float y, float width) {

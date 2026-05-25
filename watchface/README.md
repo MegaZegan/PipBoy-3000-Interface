@@ -7,7 +7,7 @@ It includes two parts:
 - A Watch Face Format face, shown in the Wear OS face picker as `VaultWatch Face`.
 - A native Android activity, shown as the interactive Pip-Boy terminal app.
 
-The terminal app is designed for Galaxy Watch 4 performance: Canvas/text UI, no WebView runtime, no heavy 3D, no constant GPS scanning, and no background sensor polling. Extra Pip-OS pages include STAT, INV, DATA, MAP, RAD, COM, SYS, SEC, SURV, and WX.
+The terminal app is designed for Galaxy Watch 4 performance: Canvas/text UI, no WebView runtime, no heavy 3D, no constant GPS scanning, and no background sensor polling. The top-level Pip-Boy tabs stay classic and readable: STAT, INV, DATA, MAP, and RAD. STAT contains nested STATUS, SPECIAL, and PERKS sub-pages for the denser wearable readouts.
 
 ## Build
 

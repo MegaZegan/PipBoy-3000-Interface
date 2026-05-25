@@ -6,34 +6,32 @@ This is a fan-made portfolio project by Mustafa Ugur Erkan / MegaZegan. It focus
 
 ## Screenshots
 
-| STAT | INV | DATA |
+| STAT / STATUS | STAT / SPECIAL | STAT / PERKS |
 | --- | --- | --- |
-| ![Galaxy Watch 4 STAT screen](docs/screenshots/watch4-status.png) | ![Galaxy Watch 4 inventory screen](docs/screenshots/watch4-inventory.png) | ![Galaxy Watch 4 data screen](docs/screenshots/watch4-data.png) |
+| ![Galaxy Watch 4 STAT status screen](docs/screenshots/watch4-status.png) | ![Galaxy Watch 4 STAT special screen](docs/screenshots/watch4-special.png) | ![Galaxy Watch 4 STAT perks screen](docs/screenshots/watch4-perks.png) |
 
-| MAP | RAD |
-| --- | --- |
-| ![Galaxy Watch 4 map screen](docs/screenshots/watch4-map.png) | ![Galaxy Watch 4 radio screen](docs/screenshots/watch4-radio.png) |
+| INV | DATA | MAP |
+| --- | --- | --- |
+| ![Galaxy Watch 4 inventory screen](docs/screenshots/watch4-inventory.png) | ![Galaxy Watch 4 data screen](docs/screenshots/watch4-data.png) | ![Galaxy Watch 4 map screen](docs/screenshots/watch4-map.png) |
 
-| Expanded Pip-OS |
+| RAD |
 | --- |
-| ![Galaxy Watch 4 expanded system screen](docs/screenshots/watch4-v26-system.png) |
+| ![Galaxy Watch 4 radio screen](docs/screenshots/watch4-radio.png) |
 
 ## Galaxy Watch 4 Features
 
 - Native Wear OS APK built for Galaxy Watch 4 / Wear OS round displays.
 - Pip-Boy styled watch face with live time, date, battery, and weather complication text.
 - Interactive terminal app with large touch targets for the watch screen.
-- STAT page with animated Vault Boy, HP/AP/RAD, heart rate, oxygen, hydration, sleep score, fatigue, status effects, and SPECIAL stats.
+- Classic top navigation with `STAT`, `INV`, `DATA`, `MAP`, and `RAD`.
+- STAT uses Pip-Boy style sub-pages: `STATUS`, `SPECIAL`, and `PERKS`.
+- STATUS page keeps the hero Vault Boy layout with HP/AP/RAD and only the most important readouts.
+- SPECIAL page carries the deeper health/survival numbers and SPECIAL bars.
+- PERKS page carries status effects, lifestyle readouts, and system/weather flavor.
 - INV page with randomized Fallout-style utility items, categories, values, and cosmetic carry weight.
 - DATA page with randomized quest names, statuses, and notes.
 - MAP page with an in-app Pip-Boy map, GPS-style readout, speed/altitude simulation, then a button to launch Google Maps.
 - RAD page with in-app radio stations, signal scanner, radio noise flavor, then station taps can launch Spotify.
-- Sliding Pip-OS tab strip with extra COM, SYS, SEC, SURV, and WX utility pages.
-- COM page for notification-style readouts.
-- SYS page for battery/RAM/temperature/storage readouts.
-- SEC page for password generator, QR/NFC/Wi-Fi/ping themed tools.
-- SURV page for water, meds, step goal, and workout reminders.
-- WX page for retro weather terminal information and radiation-style storm warnings.
 - Monofonto terminal typography, scanlines, glow, green/orange radiation accents, and round-screen composition.
 
 The expanded pages are intentionally lightweight. They use simple Canvas drawing, text rows, tiny bitmap icons, low-frequency redraws, and simulated/session data instead of constant GPS, Bluetooth, sensor, or internet polling.
